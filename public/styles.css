@@ -1,0 +1,52 @@
+/* 기본 스타일 및 모바일 대응 */
+body {
+  max-width: 600px;
+  margin: 1em auto;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  padding: 0 1em;
+  background: #fdf6e3;
+  color: #333;
+}
+
+h1, h2 {
+  text-align: center;
+  color: #d2691e;
+}
+
+section {
+  margin-bottom: 1.5em;
+}
+
+input, select, button {
+  font-size: 1rem;
+  padding: 0.5em 1em;
+  margin-left: 0.5em;
+  border-radius: 20px;
+  border: 1.5px solid #d2691e;
+  outline: none;
+  transition: 0.3s;
+}
+
+input:focus, select:focus, button:focus {
+  border-color: #ff8c00;
+}
+
+button {
+  background-color: #d2691e;
+  color: white;
+  cursor: pointer;
+  border: none;
+}
+
+button:hover {
+  background-color: #ff8c00;
+}
+
+#timetable, #meal {
+  background: white;
+  border-radius: 10px;
+  padding: 1em;
+  min-height: 6em;
+  white-space: pre-wrap;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}

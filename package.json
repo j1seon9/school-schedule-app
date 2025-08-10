@@ -1,0 +1,14 @@
+{
+  "name": "school-schedule-app",
+  "version": "1.0.0",
+  "description": "학교 시간표 및 급식표 웹앱",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "node-fetch": "^2.6.7"
+  },
+  "type": "module"
+}
