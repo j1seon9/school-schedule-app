@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>학교 시간표 및 급식표</title>
-  <link rel="stylesheet" href="style.css" />
+  <title>학교 시간표 및 급식표 조회 웹앱</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <h1>학교 시간표 및 급식표 조회</h1>
@@ -45,12 +45,12 @@
 
   <section>
     <h2>시간표</h2>
-    <div id="timetable">조회된 시간표가 없습니다.</div>
+    <div id="timetable" aria-live="polite">조회된 시간표가 없습니다.</div>
   </section>
 
   <section>
     <h2>급식표</h2>
-    <div id="meal">조회된 급식표가 없습니다.</div>
+    <div id="meal" aria-live="polite">조회된 급식표가 없습니다.</div>
   </section>
 
   <script src="app.js"></script>
