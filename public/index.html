@@ -1,59 +1,74 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>학교 시간표 및 급식표 조회 웹앱</title>
-  <link rel="stylesheet" href="styles.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>학교 시간표 & 급식표</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>학교 시간표 및 급식표 조회</h1>
+  <h1>📚 학교 시간표 & 🍽 급식표</h1>
 
+  <!-- 학교 검색 -->
   <section>
-    <label for="schoolInput">학교명 검색:</label>
-    <input type="text" id="schoolInput" placeholder="학교명을 입력하세요" />
-    <button id="schoolSearchBtn">검색</button>
+    <h2>학교 검색</h2>
+    <input type="text" id="schoolName" placeholder="학교명 입력">
+    <button id="searchSchoolBtn">검색</button>
+    <select id="schoolList"></select>
   </section>
 
+  <!-- 오늘 시간표 -->
   <section>
-    <label for="gradeSelect">학년:</label>
-    <select id="gradeSelect" disabled>
-      <option value="">학년 선택</option>
-      <option value="1">1학년</option>
-      <option value="2">2학년</option>
-      <option value="3">3학년</option>
-      <option value="4">4학년</option>
-      <option value="5">5학년</option>
-      <option value="6">6학년</option>
-    </select>
-
-    <label for="classSelect">반:</label>
-    <select id="classSelect" disabled>
-      <option value="">반 선택</option>
-      <option value="1">1반</option>
-      <option value="2">2반</option>
-      <option value="3">3반</option>
-      <option value="4">4반</option>
-      <option value="5">5반</option>
-      <option value="6">6반</option>
-      <option value="7">7반</option>
-      <option value="8">8반</option>
-      <option value="9">9반</option>
-      <option value="10">10반</option>
-    </select>
+    <h2>오늘 시간표</h2>
+    <label>학년: <input type="number" id="grade" min="1"></label>
+    <label>반: <input type="number" id="classNo" min="1"></label>
+    <button id="loadTimetableBtn">조회</button>
+    <ul id="timetable"></ul>
   </section>
 
+  <!-- 주간 시간표 -->
   <section>
-    <h2>시간표</h2>
-    <div id="timetable" aria-live="polite">조회된 시간표가 없습니다.</div>
+    <h2>주간 시간표</h2>
+    <label>학년: <input type="number" id="weekGrade" min="1"></label>
+    <label>반: <input type="number" id="weekClassNo" min="1"></label>
+    <label>시작일: <input type="date" id="weekStartDate"></label>
+    <button id="loadWeeklyTimetableBtn">조회</button>
+    <table border="1">
+      <thead>
+        <tr>
+          <th>날짜</th>
+          <th>교시</th>
+          <th>과목</th>
+        </tr>
+      </thead>
+      <tbody id="weeklyTimetable"></tbody>
+    </table>
   </section>
 
-<section>
-  <h2>월간 급식표</h2>
-  <div id="monthlyMeal">조회된 월간 급식표가 없습니다.</div>
-</section>
+  <!-- 오늘 급식 -->
+  <section>
+    <h2>오늘 급식</h2>
+    <button id="loadDailyMealBtn">조회</button>
+    <div id="dailyMeal"></div>
+  </section>
 
-  <script src="app.js"></script>
+  <!-- 월간 급식 -->
+  <section>
+    <h2>월간 급식</h2>
+    <label>시작일: <input type="date" id="startDate"></label>
+    <label>종료일: <input type="date" id="endDate"></label>
+    <button id="loadMonthlyMealBtn">조회</button>
+    <table border="1">
+      <thead>
+        <tr>
+          <th>날짜</th>
+          <th>메뉴</th>
+        </tr>
+      </thead>
+      <tbody id="monthlyMeal"></tbody>
+    </table>
+  </section>
+
+  <script src="script.js"></script>
 </body>
 </html>
-
