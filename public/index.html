@@ -1,70 +1,58 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>학교 시간표 & 급식표</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <h1>📚 학교 시간표 & 🍽 급식표</h1>
 
-  <!-- 학교 검색 -->
   <section>
     <h2>학교 검색</h2>
-    <input type="text" id="schoolName" placeholder="학교명 입력">
+    <input id="schoolName" type="text" placeholder="학교명 입력" />
     <button id="searchSchoolBtn">검색</button>
-    <select id="schoolList"></select>
+    <select id="schoolList" style="min-width:60%;"></select>
   </section>
 
-  <!-- 오늘 시간표 -->
   <section>
     <h2>오늘 시간표</h2>
-    <label>학년: <input type="number" id="grade" min="1"></label>
-    <label>반: <input type="number" id="classNo" min="1"></label>
+    <label>학년: <input id="grade" type="number" min="1" /></label>
+    <label>반: <input id="classNo" type="number" min="1" /></label>
     <button id="loadTimetableBtn">조회</button>
     <ul id="timetable"></ul>
   </section>
 
-  <!-- 주간 시간표 -->
   <section>
     <h2>주간 시간표</h2>
-    <label>학년: <input type="number" id="weekGrade" min="1"></label>
-    <label>반: <input type="number" id="weekClassNo" min="1"></label>
-    <label>시작일: <input type="date" id="weekStartDate"></label>
+    <label>학년: <input id="weekGrade" type="number" min="1" /></label>
+    <label>반: <input id="weekClassNo" type="number" min="1" /></label>
+    <label>시작일: <input id="weekStartDate" type="date" /></label>
     <button id="loadWeeklyTimetableBtn">조회</button>
-    <table border="1">
+
+    <table id="weeklyTable" border="1" style="width:100%; margin-top:8px;">
       <thead>
-        <tr>
-          <th>날짜</th>
-          <th>교시</th>
-          <th>과목</th>
-        </tr>
+        <tr><th>날짜</th><th>교시</th><th>과목</th></tr>
       </thead>
       <tbody id="weeklyTimetable"></tbody>
     </table>
   </section>
 
-  <!-- 오늘 급식 -->
   <section>
     <h2>오늘 급식</h2>
     <button id="loadDailyMealBtn">조회</button>
-    <div id="dailyMeal"></div>
+    <div id="dailyMeal" aria-live="polite" style="white-space:pre-wrap; margin-top:8px;">조회된 급식이 없습니다.</div>
   </section>
 
-  <!-- 월간 급식 -->
   <section>
     <h2>월간 급식</h2>
-    <label>시작일: <input type="date" id="startDate"></label>
-    <label>종료일: <input type="date" id="endDate"></label>
+    <label>시작일: <input id="startDate" type="date" /></label>
+    <label>종료일: <input id="endDate" type="date" /></label>
     <button id="loadMonthlyMealBtn">조회</button>
-    <table border="1">
-      <thead>
-        <tr>
-          <th>날짜</th>
-          <th>메뉴</th>
-        </tr>
-      </thead>
+
+    <table id="monthlyTable" border="1" style="width:100%; margin-top:8px;">
+      <thead><tr><th>날짜</th><th>메뉴</th></tr></thead>
       <tbody id="monthlyMeal"></tbody>
     </table>
   </section>
