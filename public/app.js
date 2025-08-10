@@ -13,6 +13,7 @@ schoolSearchBtn.addEventListener('click', async () => {
     alert('학교명을 입력하세요.');
     return;
   }
+  schoolSearchBtn.disabled = true; // 중복 클릭 방지
   try {
     const res = await fetch(`/api/schoolSearch?name=${encodeURIComponent(name)}`);
     const schools = await res.json();
@@ -20,16 +21,19 @@ schoolSearchBtn.addEventListener('click', async () => {
       alert('검색된 학교가 없습니다.');
       return;
     }
-    selectedSchool = schools[0]; // 첫 학교 선택
+
+    // 첫 학교 선택 (추후 여러 학교 선택 UI 개선 가능)
+    selectedSchool = schools[0];
     alert(`선택된 학교: ${selectedSchool.SCHUL_NM}`);
 
-    // 학년/반 선택 활성화
     gradeSelect.disabled = false;
     classSelect.disabled = false;
 
   } catch (e) {
     alert('학교 검색 중 오류가 발생했습니다.');
     console.error(e);
+  } finally {
+    schoolSearchBtn.disabled = false;
   }
 });
 
@@ -50,6 +54,9 @@ async function fetchTimetableAndMeal() {
       fetch(`/api/timetable?schoolCode=${encodeURIComponent(selectedSchool.SD_SCHUL_CODE)}&atptOfcdcScCode=${encodeURIComponent(selectedSchool.ATPT_OFCDC_SC_CODE)}&grade=${encodeURIComponent(grade)}&classNum=${encodeURIComponent(classNum)}`),
       fetch(`/api/meal?schoolCode=${encodeURIComponent(selectedSchool.SD_SCHUL_CODE)}&atptOfcdcScCode=${encodeURIComponent(selectedSchool.ATPT_OFCDC_SC_CODE)}`)
     ]);
+
+    if (!ttRes.ok) throw new Error(`시간표 API 오류: ${ttRes.statusText}`);
+    if (!mealRes.ok) throw new Error(`급식 API 오류: ${mealRes.statusText}`);
 
     const timetable = await ttRes.json();
     const meal = await mealRes.json();
@@ -77,7 +84,6 @@ function displayTimetable(timetable) {
   table.style.width = '100%';
   table.style.borderCollapse = 'collapse';
 
-  // 헤더 만들기 (예시)
   const header = table.createTHead();
   const headerRow = header.insertRow();
   ['요일', '교시', '과목', '선생님'].forEach(text => {
@@ -89,17 +95,19 @@ function displayTimetable(timetable) {
     headerRow.appendChild(th);
   });
 
-  // 바디 채우기
   const tbody = table.createTBody();
   timetable.forEach(item => {
     const row = tbody.insertRow();
-    ['ITRT_CNTNT', 'PERIO', 'GRADE', 'PROF_NM'].forEach(key => {
+
+    // NEIS API 기본 키, 없으면 빈 문자열로 대체
+    const dow = item.DOW || item.DAY_NM || ''; // API별 요일 키 다름에 대비
+    const perio = item.PERIO || item.PERIOD || '';
+    const subject = item.ITRT_CNTNT || '';
+    const teacher = item.PROF_NM || '';
+
+    [dow, perio, subject, teacher].forEach(text => {
       const cell = row.insertCell();
-      if (key === 'PERIO') cell.textContent = item[key]; // 교시
-      else if (key === 'ITRT_CNTNT') cell.textContent = item[key]; // 과목명
-      else if (key === 'PROF_NM') cell.textContent = item[key]; // 선생님
-      else if (key === 'GRADE') cell.textContent = item[key] + '학년'; // 학년
-      else cell.textContent = item[key] || '';
+      cell.textContent = text;
       cell.style.border = '1px solid #ccc';
       cell.style.padding = '0.4em';
     });
@@ -114,6 +122,10 @@ function displayMeal(meal) {
     mealDiv.textContent = '급식 정보가 없습니다.';
     return;
   }
-  const mealInfo = meal[0].DDISH_NM.replace(/<br\/>/g, '\n');
-  mealDiv.textContent = mealInfo;
+
+  // 개행 보존 위해 <pre> 사용, br 태그 전부 \n 으로 변환
+  const mealInfo = meal[0].DDISH_NM.replace(/<br\s*\/?>/gi, '\n');
+  const pre = document.createElement('pre');
+  pre.textContent = mealInfo;
+  mealDiv.appendChild(pre);
 }
