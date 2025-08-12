@@ -1,4 +1,3 @@
-// public/script.js
 // helper
 const qs = id => document.getElementById(id);
 const formatYMD = ymd => {
@@ -18,12 +17,12 @@ function openModal(items) {
   items.forEach(s => {
     const li = document.createElement("li");
     li.textContent = s.name;
+    li.tabIndex = 0;
     li.addEventListener("click", () => {
       qs("schoolCode").value = s.schoolCode;
       qs("officeCode").value = s.officeCode;
       modal.setAttribute("aria-hidden", "true");
       modal.style.display = "none";
-      // optional: autofill first grade/class or notify
     });
     modalList.appendChild(li);
   });
@@ -41,7 +40,12 @@ modal.addEventListener("click", (e) => {
     modal.style.display = "none";
   }
 });
-document.addEventListener("keydown", e => { if (e.key === "Escape") { modal.setAttribute("aria-hidden","true"); modal.style.display="none"; } });
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") {
+    modal.setAttribute("aria-hidden","true");
+    modal.style.display="none";
+  }
+});
 
 // 학교 검색
 qs("searchSchoolBtn").addEventListener("click", async () => {
@@ -125,51 +129,4 @@ qs("loadWeeklyTimetableBtn").addEventListener("click", async () => {
 
 // 오늘 급식
 qs("loadDailyMealBtn").addEventListener("click", async () => {
-  const schoolCode = qs("schoolCode").value;
-  const officeCode = qs("officeCode").value;
-  if (!schoolCode || !officeCode) return alert("학교를 선택하세요.");
-
-  try {
-    const res = await fetch(`/api/dailyMeal?schoolCode=${schoolCode}&officeCode=${officeCode}`);
-    const data = await res.json();
-    const el = qs("dailyMeal");
-    if (!data || !data.menu) { el.textContent = "급식 정보 없음"; return; }
-    el.textContent = String(data.menu).replace(/<br\s*\/?>/gi, "\n");
-  } catch (err) {
-    console.error(err);
-    alert("오늘 급식 조회 중 오류가 발생했습니다.");
-  }
-});
-
-// 월간 급식
-qs("loadMonthlyMealBtn").addEventListener("click", async () => {
-  const schoolCode = qs("schoolCode").value;
-  const officeCode = qs("officeCode").value;
-  const sd = qs("startDate").value;
-  const ed = qs("endDate").value;
-  if (!schoolCode || !officeCode) return alert("학교를 선택하세요.");
-  if (!sd || !ed) return alert("기간을 입력하세요.");
-
-  const startDate = sd.replace(/-/g,"");
-  const endDate = ed.replace(/-/g,"");
-  try {
-    const res = await fetch(`/api/monthlyMeal?schoolCode=${schoolCode}&officeCode=${officeCode}&startDate=${startDate}&endDate=${endDate}`);
-    const data = await res.json();
-    const tbody = qs("monthlyMeal");
-    tbody.innerHTML = "";
-    if (!Array.isArray(data) || data.length === 0) {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `<td colspan="2">월간 급식 정보가 없습니다.</td>`;
-      tbody.appendChild(tr);
-      return;
-    }
-    data.forEach(item => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `<td>${formatYMD(item.date)}</td><td>${(item.menu || "").replace(/<br\s*\/?>/g, ", ")}</td>`;
-      tbody.appendChild(tr);
-    });
-  } catch (err) {
-    console.error(err);
-    alert("월간 급식 조회 중 오류가 발생했습니다.");
-  }
-});
+  const schoolCode = qs("schoolCode").
