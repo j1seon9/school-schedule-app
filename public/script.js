@@ -1,185 +1,116 @@
-import express from "express";
-import fetch from "node-fetch";
-import dotenv from "dotenv";
-import cors from "cors";
-import path from "path";
-import { fileURLToPath } from "url";
-
-dotenv.config();
-const API_KEY = process.env.API_KEY;
-const PORT = process.env.PORT || 3000;
-
-if (!API_KEY) {
-  console.error("ERROR: API_KEY is required in environment variables.");
-  process.exit(1);
+:root {
+  --main-color: #ff7f50;
+  --bg-color: #fff8f2;
+  --card-bg: #ffffff;
+  --muted: #666;
 }
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+* { box-sizing: border-box; }
 
-const app = express();
-app.use(cors());
-app.use(express.static(path.join(__dirname, "public")));
-app.use(express.json());
-
-// --- simple in-memory cache ---
-const cache = new Map();
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-
-async function fetchWithRetry(url, retries = 3, baseDelay = 500) {
-  let lastErr;
-  for (let i = 0; i < retries; i++) {
-    try {
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
-      const json = await res.json();
-      return json;
-    } catch (err) {
-      lastErr = err;
-      if (i < retries - 1) {
-        const delay = baseDelay * (2 ** i);
-        await new Promise(r => setTimeout(r, delay));
-      }
-    }
-  }
-  throw lastErr;
+body {
+  font-family: 'Noto Sans KR', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  background: var(--bg-color);
+  margin: 0;
+  color: #222;
 }
 
-async function getCached(url) {
-  const now = Date.now();
-  const entry = cache.get(url);
-  if (entry && entry.expiry > now) return entry.data;
-  const data = await fetchWithRetry(url);
-  cache.set(url, { data, expiry: now + CACHE_TTL });
-  return data;
+.container {
+  max-width: 960px;
+  margin: 24px auto;
+  padding: 16px;
 }
 
-// Health check
-app.get("/health", (req, res) => res.status(200).send("OK"));
+h1 {
+  text-align: center;
+  color: var(--main-color);
+  margin-bottom: 12px;
+}
 
-// 학교 검색
-app.get("/api/searchSchool", async (req, res) => {
-  try {
-    const name = (req.query.name || "").trim();
-    if (!name) return res.status(400).json({ error: "name query required" });
+.card {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 16px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+}
 
-    const url = `https://open.neis.go.kr/hub/schoolInfo?KEY=${API_KEY}&Type=json&SCHUL_NM=${encodeURIComponent(name)}`;
-    const j = await getCached(url);
-    if (!j.schoolInfo || !j.schoolInfo[1] || !Array.isArray(j.schoolInfo[1].row)) {
-      return res.json([]);
-    }
-    const rows = j.schoolInfo[1].row.map(s => ({
-      name: s.SCHUL_NM,
-      code: s.SD_SCHUL_CODE,
-      region: s.ATPT_OFCDC_SC_CODE
-    }));
-    res.json(rows);
-  } catch (err) {
-    console.error("searchSchool error:", err.message || err);
-    res.status(500).json({ error: "school search failed" });
-  }
-});
+input[type="text"], input[type="number"], input[type="date"], select {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #e6d6c8;
+  margin-right: 8px;
+}
 
-// 일간 시간표
-app.get("/api/dailyTimetable", async (req, res) => {
-  try {
-    const { schoolCode, officeCode, grade, classNo } = req.query;
-    if (!schoolCode || !officeCode || !grade || !classNo) return res.status(400).json([]);
+button {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--main-color);
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: transform .08s ease, box-shadow .08s ease;
+}
 
-    const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-    const url = `https://open.neis.go.kr/hub/hisTimetable?KEY=${API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${officeCode}&SD_SCHUL_CODE=${schoolCode}&GRADE=${grade}&CLRM_NM=${classNo}&TI_FROM_YMD=${today}&TI_TO_YMD=${today}`;
-    const j = await getCached(url);
+button:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.08); }
+button:active { transform: translateY(0); }
 
-    if (!j.hisTimetable || !j.hisTimetable[1] || !Array.isArray(j.hisTimetable[1].row)) {
-      return res.json([]);
-    }
+ul#timetable { padding-left: 1.2em; margin-top: 12px; }
 
-    const rows = j.hisTimetable[1].row.map(r => ({
-      period: r.ITRT_CNTNT,  // 실제 과목명
-      subject: r.ITRT_CNTNT  // 여기 필요에 따라 수정 가능
-    }));
-    res.json(rows);
-  } catch (err) {
-    console.error("dailyTimetable error:", err.message || err);
-    res.status(500).json([]);
-  }
-});
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+}
 
-// 주간 시간표
-app.get("/api/weeklyTimetable", async (req, res) => {
-  try {
-    const { schoolCode, officeCode, grade, classNo, startDate } = req.query;
-    if (!schoolCode || !officeCode || !grade || !classNo || !startDate) return res.status(400).json([]);
+th, td {
+  padding: 10px;
+  border-bottom: 1px solid #f0e6df;
+  text-align: left;
+}
 
-    const sDate = startDate;
-    const eDate = new Date(sDate.slice(0,4), sDate.slice(4,6)-1, Number(sDate.slice(6,8)) + 4);
-    const endDateStr = eDate.toISOString().slice(0,10).replace(/-/g,"");
+th {
+  background: var(--main-color);
+  color: white;
+  font-weight: 700;
+}
 
-    const url = `https://open.neis.go.kr/hub/hisTimetable?KEY=${API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${officeCode}&SD_SCHUL_CODE=${schoolCode}&GRADE=${grade}&CLRM_NM=${classNo}&TI_FROM_YMD=${sDate}&TI_TO_YMD=${endDateStr}`;
-    const j = await getCached(url);
+/* modal */
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 999;
+}
 
-    if (!j.hisTimetable || !j.hisTimetable[1] || !Array.isArray(j.hisTimetable[1].row)) {
-      return res.json([]);
-    }
+.modal[aria-hidden="false"] { display: flex; }
 
-    const rows = j.hisTimetable[1].row.map(r => ({
-      date: r.ALL_TI_YMD,
-      period: r.Period || r.ITRT_CNTNT, // 상황에 맞게 조정 필요
-      subject: r.ITRT_CNTNT
-    }));
-    res.json(rows);
-  } catch (err) {
-    console.error("weeklyTimetable error:", err.message || err);
-    res.status(500).json([]);
-  }
-});
+.modal-content {
+  background: white;
+  border-radius: 10px;
+  max-width: 480px;
+  width: 100%;
+  padding: 16px;
+}
 
-// 오늘 급식
-app.get("/api/dailyMeal", async (req, res) => {
-  try {
-    const { schoolCode, officeCode } = req.query;
-    if (!schoolCode || !officeCode) return res.status(400).json({});
+.modal ul { list-style: none; padding: 0; max-height: 320px; overflow: auto; margin: 8px 0; }
+.modal li { padding: 8px 10px; border-radius: 6px; cursor: pointer; }
+.modal li:hover { background: #faf6f4; }
 
-    const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-    const url = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${officeCode}&SD_SCHUL_CODE=${schoolCode}&MLSV_YMD=${today}`;
-    const j = await getCached(url);
+/* 포커스 스타일 추가 */
+button:focus, .modal li:focus {
+  outline: 2px solid var(--main-color);
+  outline-offset: 2px;
+  background-color: #ffe8dc;
+}
 
-    if (!j.mealServiceDietInfo || !j.mealServiceDietInfo[1] || !Array.isArray(j.mealServiceDietInfo[1].row)) {
-      return res.json({});
-    }
-
-    const menu = j.mealServiceDietInfo[1].row[0].DDISH_NM;
-    res.json({ menu });
-  } catch (err) {
-    console.error("dailyMeal error:", err.message || err);
-    res.status(500).json({});
-  }
-});
-
-// 월간 급식
-app.get("/api/monthlyMeal", async (req, res) => {
-  try {
-    const { schoolCode, officeCode, startDate, endDate } = req.query;
-    if (!schoolCode || !officeCode || !startDate || !endDate) return res.status(400).json([]);
-
-    const url = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${officeCode}&SD_SCHUL_CODE=${schoolCode}&MLSV_FROM_YMD=${startDate}&MLSV_TO_YMD=${endDate}`;
-    const j = await getCached(url);
-
-    if (!j.mealServiceDietInfo || !j.mealServiceDietInfo[1] || !Array.isArray(j.mealServiceDietInfo[1].row)) {
-      return res.json([]);
-    }
-
-    const rows = j.mealServiceDietInfo[1].row.map(r => ({
-      date: r.MLSV_YMD,
-      menu: r.DDISH_NM
-    }));
-    res.json(rows);
-  } catch (err) {
-    console.error("monthlyMeal error:", err.message || err);
-    res.status(500).json([]);
-  }
-});
-
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+/* responsive */
+@media (max-width: 640px) {
+  .container { padding: 12px; }
+  input, button { width: 100%; margin: 6px 0; }
+  .modal-content { padding: 12px; }
+}
