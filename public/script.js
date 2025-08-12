@@ -1,116 +1,183 @@
-:root {
-  --main-color: #ff7f50;
-  --bg-color: #fff8f2;
-  --card-bg: #ffffff;
-  --muted: #666;
+// helper
+const qs = id => document.getElementById(id);
+const formatYMD = ymd => {
+  const s = String(ymd || "");
+  if (s.length === 8) return `${s.slice(0,4)}-${s.slice(4,6)}-${s.slice(6,8)}`;
+  return s;
+};
+
+// modal elements
+const modal = qs("schoolModal");
+const modalList = qs("schoolList");
+const closeModalBtn = qs("closeModalBtn");
+
+// open modal with list
+function openModal(items) {
+  modalList.innerHTML = "";
+  items.forEach(s => {
+    const li = document.createElement("li");
+    li.textContent = s.name;
+    li.tabIndex = 0;
+    li.addEventListener("click", () => {
+      qs("schoolCode").value = s.code;       // 서버에서 보낸 키명(code)
+      qs("officeCode").value = s.region;    // 서버에서 보낸 키명(region)
+      modal.setAttribute("aria-hidden", "true");
+      modal.style.display = "none";
+    });
+    modalList.appendChild(li);
+  });
+  modal.setAttribute("aria-hidden", "false");
+  modal.style.display = "flex";
 }
 
-* { box-sizing: border-box; }
+closeModalBtn.addEventListener("click", () => {
+  modal.setAttribute("aria-hidden", "true");
+  modal.style.display = "none";
+});
+modal.addEventListener("click", (e) => {
+  if (e.target === modal) {
+    modal.setAttribute("aria-hidden", "true");
+    modal.style.display = "none";
+  }
+});
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") {
+    modal.setAttribute("aria-hidden","true");
+    modal.style.display="none";
+  }
+});
 
-body {
-  font-family: 'Noto Sans KR', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-  background: var(--bg-color);
-  margin: 0;
-  color: #222;
-}
+// 학교 검색
+qs("searchSchoolBtn").addEventListener("click", async () => {
+  const name = (qs("schoolName").value || "").trim();
+  if (!name) return alert("학교명을 입력하세요.");
+  try {
+    const res = await fetch(`/api/searchSchool?name=${encodeURIComponent(name)}`);
+    const data = await res.json();
+    if (!Array.isArray(data) || data.length === 0) {
+      alert("검색 결과가 없습니다.");
+      return;
+    }
+    openModal(data);
+  } catch (err) {
+    console.error(err);
+    alert("학교 검색 중 오류가 발생했습니다.");
+  }
+});
 
-.container {
-  max-width: 960px;
-  margin: 24px auto;
-  padding: 16px;
-}
+// 오늘 시간표
+qs("loadTimetableBtn").addEventListener("click", async () => {
+  const schoolCode = qs("schoolCode").value;
+  const officeCode = qs("officeCode").value;
+  const grade = qs("grade").value;
+  const classNo = qs("classNo").value;
+  if (!schoolCode || !officeCode) return alert("학교를 선택하세요.");
+  if (!grade || !classNo) return alert("학년/반을 입력하세요.");
 
-h1 {
-  text-align: center;
-  color: var(--main-color);
-  margin-bottom: 12px;
-}
+  try {
+    const res = await fetch(`/api/dailyTimetable?schoolCode=${schoolCode}&officeCode=${officeCode}&grade=${grade}&classNo=${classNo}`);
+    const data = await res.json();
+    const ul = qs("timetable");
+    ul.innerHTML = "";
+    if (!Array.isArray(data) || data.length === 0) {
+      ul.textContent = "시간표 정보가 없습니다.";
+      return;
+    }
+    data.forEach(item => {
+      const li = document.createElement("li");
+      li.textContent = `${item.period}교시: ${item.subject}`;
+      ul.appendChild(li);
+    });
+  } catch (err) {
+    console.error(err);
+    alert("시간표 조회 중 오류가 발생했습니다.");
+  }
+});
 
-.card {
-  background: var(--card-bg);
-  border-radius: 12px;
-  padding: 14px;
-  margin-bottom: 16px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
-}
+// 주간 시간표
+qs("loadWeeklyTimetableBtn").addEventListener("click", async () => {
+  const schoolCode = qs("schoolCode").value;
+  const officeCode = qs("officeCode").value;
+  const grade = qs("weekGrade").value;
+  const classNo = qs("weekClassNo").value;
+  const startDateEl = qs("weekStartDate");
+  if (!schoolCode || !officeCode) return alert("학교를 선택하세요.");
+  if (!grade || !classNo || !startDateEl.value) return alert("학년/반/시작일을 입력하세요.");
 
-input[type="text"], input[type="number"], input[type="date"], select {
-  padding: 10px;
-  border-radius: 8px;
-  border: 1px solid #e6d6c8;
-  margin-right: 8px;
-}
+  const startDate = startDateEl.value.replace(/-/g,"");
+  try {
+    const res = await fetch(`/api/weeklyTimetable?schoolCode=${schoolCode}&officeCode=${officeCode}&grade=${grade}&classNo=${classNo}&startDate=${startDate}`);
+    const data = await res.json();
+    const tbody = qs("weeklyTimetable");
+    tbody.innerHTML = "";
+    if (!Array.isArray(data) || data.length === 0) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td colspan="3">주간 시간표 정보가 없습니다.</td>`;
+      tbody.appendChild(tr);
+      return;
+    }
+    data.forEach(item => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${formatYMD(item.date)}</td><td>${item.period}</td><td>${item.subject}</td>`;
+      tbody.appendChild(tr);
+    });
+  } catch (err) {
+    console.error(err);
+    alert("주간 시간표 조회 중 오류가 발생했습니다.");
+  }
+});
 
-button {
-  padding: 10px 12px;
-  border-radius: 8px;
-  background: var(--main-color);
-  color: white;
-  border: none;
-  cursor: pointer;
-  font-weight: 600;
-  transition: transform .08s ease, box-shadow .08s ease;
-}
+// 오늘 급식
+qs("loadDailyMealBtn").addEventListener("click", async () => {
+  const schoolCode = qs("schoolCode").value;
+  const officeCode = qs("officeCode").value;
+  if (!schoolCode || !officeCode) return alert("학교를 선택하세요.");
 
-button:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.08); }
-button:active { transform: translateY(0); }
+  try {
+    const res = await fetch(`/api/dailyMeal?schoolCode=${schoolCode}&officeCode=${officeCode}`);
+    const data = await res.json();
+    const dailyMealDiv = qs("dailyMeal");
+    if (!data.menu) {
+      dailyMealDiv.textContent = "오늘 급식 정보가 없습니다.";
+    } else {
+      dailyMealDiv.textContent = data.menu.replace(/<br\/?>/gi, "\n");
+    }
+  } catch (err) {
+    console.error(err);
+    alert("급식 조회 중 오류가 발생했습니다.");
+  }
+});
 
-ul#timetable { padding-left: 1.2em; margin-top: 12px; }
+// 월간 급식
+qs("loadMonthlyMealBtn").addEventListener("click", async () => {
+  const schoolCode = qs("schoolCode").value;
+  const officeCode = qs("officeCode").value;
+  const startDate = qs("startDate").value;
+  const endDate = qs("endDate").value;
+  if (!schoolCode || !officeCode) return alert("학교를 선택하세요.");
+  if (!startDate || !endDate) return alert("시작일과 종료일을 모두 입력하세요.");
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 12px;
-}
+  const sDate = startDate.replace(/-/g, "");
+  const eDate = endDate.replace(/-/g, "");
 
-th, td {
-  padding: 10px;
-  border-bottom: 1px solid #f0e6df;
-  text-align: left;
-}
-
-th {
-  background: var(--main-color);
-  color: white;
-  font-weight: 700;
-}
-
-/* modal */
-.modal {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.45);
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  z-index: 999;
-}
-
-.modal[aria-hidden="false"] { display: flex; }
-
-.modal-content {
-  background: white;
-  border-radius: 10px;
-  max-width: 480px;
-  width: 100%;
-  padding: 16px;
-}
-
-.modal ul { list-style: none; padding: 0; max-height: 320px; overflow: auto; margin: 8px 0; }
-.modal li { padding: 8px 10px; border-radius: 6px; cursor: pointer; }
-.modal li:hover { background: #faf6f4; }
-
-/* 포커스 스타일 추가 */
-button:focus, .modal li:focus {
-  outline: 2px solid var(--main-color);
-  outline-offset: 2px;
-  background-color: #ffe8dc;
-}
-
-/* responsive */
-@media (max-width: 640px) {
-  .container { padding: 12px; }
-  input, button { width: 100%; margin: 6px 0; }
-  .modal-content { padding: 12px; }
-}
+  try {
+    const res = await fetch(`/api/monthlyMeal?schoolCode=${schoolCode}&officeCode=${officeCode}&startDate=${sDate}&endDate=${eDate}`);
+    const data = await res.json();
+    const tbody = qs("monthlyMeal");
+    tbody.innerHTML = "";
+    if (!Array.isArray(data) || data.length === 0) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td colspan="2">월간 급식 정보가 없습니다.</td>`;
+      tbody.appendChild(tr);
+      return;
+    }
+    data.forEach(item => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${formatYMD(item.date)}</td><td>${item.menu.replace(/<br\/?>/gi, "\n")}</td>`;
+      tbody.appendChild(tr);
+    });
+  } catch (err) {
+    console.error(err);
+    alert("월간 급식 조회 중 오류가 발생했습니다.");
+  }
+});
