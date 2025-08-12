@@ -12,7 +12,7 @@ const API_KEY = process.env.API_KEY;
 // 환경변수 체크
 if (!API_KEY) {
   console.error("[ERROR] API_KEY is required in environment variables.");
-  process.exit(1);
+  //process.exit(1);
 }
 
 app.use(cors());
@@ -56,3 +56,4 @@ app.get("/api/searchSchool", async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
