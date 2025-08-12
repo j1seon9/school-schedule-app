@@ -101,6 +101,13 @@ th {
 .modal li { padding: 8px 10px; border-radius: 6px; cursor: pointer; }
 .modal li:hover { background: #faf6f4; }
 
+/* 포커스 스타일 추가 */
+button:focus, .modal li:focus {
+  outline: 2px solid var(--main-color);
+  outline-offset: 2px;
+  background-color: #ffe8dc;
+}
+
 /* responsive */
 @media (max-width: 640px) {
   .container { padding: 12px; }
