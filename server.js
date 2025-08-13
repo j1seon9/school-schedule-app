@@ -95,7 +95,7 @@ app.get("/api/dailyTimetable", async (req, res) => {
     }
 
     const rows = j.hisTimetable[1].row.map(r => ({
-      period: r.ITRT_CNTNT,  // 실제 과목명
+      period: r.PERIO,  // 실제 과목명
       subject: r.ITRT_CNTNT  // 여기 필요에 따라 수정 가능
     }));
     res.json(rows);
@@ -124,7 +124,7 @@ app.get("/api/weeklyTimetable", async (req, res) => {
 
     const rows = j.hisTimetable[1].row.map(r => ({
       date: r.ALL_TI_YMD,
-      period: r.Period || r.ITRT_CNTNT, // 상황에 맞게 조정 필요
+      period: r.PERIO || r.ITRT_CNTNT, // 상황에 맞게 조정 필요
       subject: r.ITRT_CNTNT
     }));
     res.json(rows);
@@ -157,7 +157,7 @@ app.get("/api/dailyMeal", async (req, res) => {
 });
 
 // 월간 급식
-app.get("/api/monthlyMeal", async (req, res) => {
+app.PERIOnthlyMeal", async (req, res) => {
   try {
     const { schoolCode, officeCode, startDate, endDate } = req.query;
     if (!schoolCode || !officeCode || !startDate || !endDate) return res.status(400).json([]);
@@ -183,4 +183,5 @@ app.get("/api/monthlyMeal", async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
 
