@@ -55,7 +55,7 @@ async function getCached(url) {
 }
 
 // Health check
-app.get("/health", (req, res) => res.status(200).send("OK"));
+app.get("/health", (req, res) => res.status(200).send("서버가 정상적으로 동작 중입니다."));
 
 // 학교 검색
 app.get("/api/searchSchool", async (req, res) => {
@@ -183,3 +183,4 @@ app.get("/api/monthlyMeal", async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
