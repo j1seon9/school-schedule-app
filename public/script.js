@@ -85,7 +85,7 @@ qs("loadTimetableBtn").addEventListener("click", async () => {
     }
     data.forEach(item => {
       const li = document.createElement("li");
-      li.textContent = `${item.period}교시: ${item.subject}`;
+      li.textContent = `${item.period}교시:  ${item.subject}`;
       ul.appendChild(li);
     });
   } catch (err) {
@@ -118,7 +118,7 @@ qs("loadWeeklyTimetableBtn").addEventListener("click", async () => {
     }
     data.forEach(item => {
       const tr = document.createElement("tr");
-      tr.innerHTML = `<td>${formatYMD(item.date)}</td><td>${item.period}</td><td>${item.subject}</td>`;
+      tr.innerHTML = `<td>${formatYMD(item.date)}</td> <td>${item.period}</td> <td>${item.subject}</td>`;
       tbody.appendChild(tr);
     });
   } catch (err) {
@@ -181,3 +181,4 @@ qs("loadMonthlyMealBtn").addEventListener("click", async () => {
     alert("월간 급식 조회 중 오류가 발생했습니다.");
   }
 });
+
