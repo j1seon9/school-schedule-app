@@ -34,11 +34,19 @@ h1 {
   box-shadow: 0 6px 18px rgba(0,0,0,0.06);
 }
 
+.row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.hint { margin-top: 8px; color: var(--muted); font-size: 0.9rem; }
+.muted { color: var(--muted); }
+
 input[type="text"], input[type="number"], input[type="date"], select {
   padding: 10px;
   border-radius: 8px;
   border: 1px solid #e6d6c8;
-  margin-right: 8px;
 }
 
 button {
@@ -61,12 +69,14 @@ table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 12px;
+  background: white;
 }
 
 th, td {
   padding: 10px;
   border-bottom: 1px solid #f0e6df;
   text-align: left;
+  vertical-align: top;
 }
 
 th {
@@ -92,25 +102,19 @@ th {
 .modal-content {
   background: white;
   border-radius: 10px;
-  max-width: 480px;
+  max-width: 520px;
   width: 100%;
   padding: 16px;
 }
 
-.modal ul { list-style: none; padding: 0; max-height: 320px; overflow: auto; margin: 8px 0; }
-.modal li { padding: 8px 10px; border-radius: 6px; cursor: pointer; }
+.modal ul { list-style: none; padding: 0; max-height: 360px; overflow: auto; margin: 8px 0; }
+.modal li { padding: 10px 12px; border-radius: 6px; cursor: pointer; }
 .modal li:hover { background: #faf6f4; }
-
-/* 포커스 스타일 추가 */
-button:focus, .modal li:focus {
-  outline: 2px solid var(--main-color);
-  outline-offset: 2px;
-  background-color: #ffe8dc;
-}
 
 /* responsive */
 @media (max-width: 640px) {
   .container { padding: 12px; }
-  input, button { width: 100%; margin: 6px 0; }
+  .row { flex-direction: column; align-items: stretch; }
+  input, button, select { width: 100%; }
   .modal-content { padding: 12px; }
 }
