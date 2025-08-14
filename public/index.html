@@ -19,7 +19,7 @@
       <input id="schoolCode" type="hidden" />
       <input id="officeCode" type="hidden" />
       <input id="schoolType" type="hidden" />
-      <div class="hint">검색 후 팝업에서 학교를 선택하면 급식/시간표를 불러옵니다.</div>
+      <div class="hint">검색 후 팝업에서 학교를 선택하세요.</div>
     </section>
 
     <section class="card">
@@ -29,12 +29,11 @@
         <label>반: <input id="classNo" type="number" min="1" /></label>
         <button id="loadTimetableBtn">조회</button>
       </div>
-      <div id="timetableMeta" class="muted"></div>
       <ul id="timetable"></ul>
     </section>
 
     <section class="card">
-      <h2>주간 시간표 (5일)</h2>
+      <h2>주간 시간표 (하루 묶음)</h2>
       <div class="row">
         <label>학년: <input id="weekGrade" type="number" min="1" /></label>
         <label>반: <input id="weekClassNo" type="number" min="1" /></label>
@@ -42,29 +41,51 @@
         <button id="loadWeeklyTimetableBtn">조회</button>
       </div>
       <table id="weeklyTable">
-        <thead><tr><th>날짜</th><th>교시</th><th>과목</th><th>교사</th></tr></thead>
+        <thead>
+          <tr>
+            <th style="width: 38%">날짜</th>
+            <th style="width: 15%">교시</th>
+            <th>과목 / 교사</th>
+          </tr>
+        </thead>
         <tbody id="weeklyTimetable"></tbody>
       </table>
     </section>
 
     <section class="card">
-      <h2>오늘 급식 & 한달치</h2>
+      <h2>오늘 급식</h2>
       <div class="row">
         <button id="loadDailyMealBtn">조회</button>
       </div>
-      <div id="dailyMeal" class="meal-text" aria-live="polite">조회된 급식이 없습니다.</div>
+      <div id="dailyMeal" aria-live="polite" class="pre">조회된 급식이 없습니다.</div>
+    </section>
+
+    <section class="card">
+      <h2>월간 급식 (조회일 기준)</h2>
+      <div class="row">
+        <label>조회일: <input id="mealRefDate" type="date" /></label>
+        <button id="loadMonthlyMealBtn">조회</button>
+      </div>
       <table id="monthlyTable">
         <thead><tr><th>날짜</th><th>메뉴</th></tr></thead>
         <tbody id="monthlyMeal"></tbody>
       </table>
-      <div class="muted">※ 방학/주말에는 "급식 정보 없음"으로 표시됩니다.</div>
+    </section>
+
+    <section class="card">
+      <h2>서버 상태</h2>
+      <div class="row">
+        <a href="/healthz" target="_blank" rel="noopener noreferrer">
+          <button>헬스체크 페이지 열기</button>
+        </a>
+      </div>
     </section>
   </div>
 
-  <!-- Modal -->
+  <!-- 검색 결과 모달 -->
   <div id="schoolModal" class="modal" aria-hidden="true">
-    <div class="modal-content">
-      <h3>검색 결과</h3>
+    <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <h3 id="modalTitle">검색 결과</h3>
       <ul id="schoolList"></ul>
       <div style="text-align:right; margin-top:8px;">
         <button id="closeModalBtn">닫기</button>
