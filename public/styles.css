@@ -34,14 +34,9 @@ h1 {
   box-shadow: 0 6px 18px rgba(0,0,0,0.06);
 }
 
-.row {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 
 .hint { margin-top: 8px; color: var(--muted); font-size: 0.9rem; }
-.muted { color: var(--muted); }
 
 input[type="text"], input[type="number"], input[type="date"], select {
   padding: 10px;
@@ -69,7 +64,7 @@ table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 12px;
-  background: white;
+  overflow-x: auto;
 }
 
 th, td {
@@ -84,6 +79,10 @@ th {
   color: white;
   font-weight: 700;
 }
+
+.day-header td { background: #fff1ea; }
+
+.pre { white-space: pre-wrap; }
 
 /* modal */
 .modal {
@@ -102,19 +101,19 @@ th {
 .modal-content {
   background: white;
   border-radius: 10px;
-  max-width: 520px;
+  max-width: 480px;
   width: 100%;
   padding: 16px;
 }
 
-.modal ul { list-style: none; padding: 0; max-height: 360px; overflow: auto; margin: 8px 0; }
-.modal li { padding: 10px 12px; border-radius: 6px; cursor: pointer; }
+.modal ul { list-style: none; padding: 0; max-height: 320px; overflow: auto; margin: 8px 0; }
+.modal li { padding: 8px 10px; border-radius: 6px; cursor: pointer; }
 .modal li:hover { background: #faf6f4; }
 
 /* responsive */
 @media (max-width: 640px) {
   .container { padding: 12px; }
-  .row { flex-direction: column; align-items: stretch; }
-  input, button, select { width: 100%; }
+  input, button { width: 100%; }
+  .row { gap: 6px; }
   .modal-content { padding: 12px; }
 }
