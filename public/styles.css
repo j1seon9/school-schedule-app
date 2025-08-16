@@ -34,14 +34,11 @@ h1 {
   box-shadow: 0 6px 18px rgba(0,0,0,0.06);
 }
 
-.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-
-.hint { margin-top: 8px; color: var(--muted); font-size: 0.9rem; }
-
-input[type="text"], input[type="number"], input[type="date"], select {
+input[type="text"], input[type="number"], input[type="date"], input[type="month"], select {
   padding: 10px;
   border-radius: 8px;
   border: 1px solid #e6d6c8;
+  margin-right: 8px;
 }
 
 button {
@@ -58,31 +55,77 @@ button {
 button:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.08); }
 button:active { transform: translateY(0); }
 
-ul#timetable { padding-left: 1.2em; margin-top: 12px; }
-
-table {
-  width: 100%;
-  border-collapse: collapse;
+/* ===================
+   📅 월간 급식 캘린더
+   =================== */
+.calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
   margin-top: 12px;
-  overflow-x: auto;
 }
 
-th, td {
-  padding: 10px;
-  border-bottom: 1px solid #f0e6df;
-  text-align: left;
-  vertical-align: top;
+.calendar-day {
+  border: 1px solid #f0e6df;
+  border-radius: 6px;
+  min-height: 100px;
+  padding: 6px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
 }
 
-th {
-  background: var(--main-color);
-  color: white;
-  font-weight: 700;
+.calendar-day header {
+  font-weight: bold;
+  margin-bottom: 4px;
+  color: var(--main-color);
 }
 
-.day-header td { background: #fff1ea; }
+.calendar-day .meal {
+  font-size: 0.85em;
+  white-space: pre-line;
+  color: #444;
+  flex-grow: 1;
+}
 
-.pre { white-space: pre-wrap; }
+.calendar-day.empty {
+  background: #fafafa;
+  border: none;
+}
+
+/* ===================
+   📘 시간표 grid
+   =================== */
+.timetable-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.timetable-cell {
+  background: #fff;
+  border: 1px solid #f0e6df;
+  border-radius: 8px;
+  padding: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+.timetable-cell .period {
+  font-weight: bold;
+  color: var(--main-color);
+}
+
+.timetable-cell .subject {
+  margin-top: 4px;
+  font-size: 0.95em;
+}
+
+.timetable-cell .teacher {
+  margin-top: 2px;
+  font-size: 0.8em;
+  color: var(--muted);
+}
 
 /* modal */
 .modal {
@@ -113,7 +156,6 @@ th {
 /* responsive */
 @media (max-width: 640px) {
   .container { padding: 12px; }
-  input, button { width: 100%; }
-  .row { gap: 6px; }
+  input, button { width: 100%; margin: 6px 0; }
   .modal-content { padding: 12px; }
 }
