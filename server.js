@@ -25,24 +25,15 @@ app.use(express.static(path.join(__dirname, "public")));
 
 const BASE = "https://open.neis.go.kr/hub";
 
-/** Helper: normalize school kind text to priority list of timetable endpoints
- * We will try endpoints in priority order until data found.
- */
+/** Helper: normalize school kind text to priority list of timetable endpoints */
 function endpointsForKind(kindText = "") {
   const k = String(kindText || "").toLowerCase();
-  // default priority lists:
-  // ELS (초) -> elsTimetable
-  // MIS (중) -> misTimetable
-  // HIS (고) -> hisTimetable
-  // 특성화 -> prefer hisTimetable (vocational)
-  // 특수 -> try mis then els then his (fallback)
   if (k.includes("특성")) return ["hisTimetable", "misTimetable", "elsTimetable"];
   if (k.includes("특수")) return ["misTimetable", "elsTimetable", "hisTimetable"];
   if (k.includes("고")) return ["hisTimetable", "misTimetable", "elsTimetable"];
   if (k.includes("중")) return ["misTimetable", "elsTimetable", "hisTimetable"];
   if (k.includes("초")) return ["elsTimetable", "misTimetable", "hisTimetable"];
-  // fallback: try all
-  return ["elsTimetable", "misTimetable", "hisTimetable"];
+  return ["elsTimetable", "misTimetable", "hisTimetable"]; // fallback
 }
 
 function ymdFromDate(d) {
@@ -66,17 +57,12 @@ async function fetchJson(url, retries = 2) {
   throw lastErr;
 }
 
-// ------------------
-// Endpoints
-// ------------------
-
-// Health
+// ------------------ Endpoints ------------------
 app.get("/health", (req, res) => {
   res.json({ ok: true, time: new Date().toISOString() });
 });
 
 // 1) Search School
-// GET /api/searchSchool?name=...
 app.get("/api/searchSchool", async (req, res) => {
   const name = (req.query.name || "").trim();
   if (!name) return res.status(400).json([]);
@@ -98,9 +84,7 @@ app.get("/api/searchSchool", async (req, res) => {
   }
 });
 
-// Utility: try multiple endpoints until find timetable rows
 async function tryTimetableEndpoints(endpoints, params) {
-  // params: {officeCode, schoolCode, grade, classNo, fromYmd, toYmd}
   for (const ep of endpoints) {
     const url =
       `${BASE}/${ep}?KEY=${API_KEY}&Type=json&pIndex=1&pSize=500` +
@@ -115,16 +99,14 @@ async function tryTimetableEndpoints(endpoints, params) {
       const j = await fetchJson(url);
       const rows = j?.[ep]?.[1]?.row || [];
       if (Array.isArray(rows) && rows.length > 0) {
-        // Map and return
         return rows.map(r => ({
           date: r.ALL_TI_YMD || r.TI_YMD || params.dateYmd || "",
           period: r.PERIO || r.PERIOD || "",
           subject: r.ITRT_CNTNT || r.SUBJECT || "",
-          teacher: r.TEACHER_NM || r.DUTY_TM || "" // try TEACHER_NM, fallback field guess
+          teacher: r.TEACHER_NM || r.DUTY_TM || ""
         }));
       }
     } catch (err) {
-      // try next endpoint
       console.warn(`tryTimetableEndpoints: ${ep} failed`, err.message || err);
       continue;
     }
@@ -132,8 +114,7 @@ async function tryTimetableEndpoints(endpoints, params) {
   return [];
 }
 
-// 2) Daily timetable (top)
-// GET /api/dailyTimetable?schoolCode=&officeCode=&grade=&classNo=&typeName=...
+// 2) Daily timetable
 app.get("/api/dailyTimetable", async (req, res) => {
   try {
     const { schoolCode, officeCode, grade, classNo, typeName } = req.query;
@@ -149,15 +130,12 @@ app.get("/api/dailyTimetable", async (req, res) => {
   }
 });
 
-// 3) Weekly timetable (grid grouped by date)
-// GET /api/weeklyTimetable?schoolCode=&officeCode=&grade=&classNo=&startDate=YYYY-MM-DD&typeName=...
+// 3) Weekly timetable
 app.get("/api/weeklyTimetable", async (req, res) => {
   try {
     const { schoolCode, officeCode, grade, classNo, startDate, typeName } = req.query;
     if (!schoolCode || !officeCode || !grade || !classNo || !startDate) return res.status(400).json([]);
-    // normalize startDate to Date object (user provides YYYY-MM-DD)
     const sd = new Date(startDate);
-    // we'll produce 5 days (Mon-Fri) starting from given startDate (assume startDate is Monday typically)
     const from = sd;
     const to = new Date(sd);
     to.setDate(to.getDate() + 4);
@@ -165,7 +143,6 @@ app.get("/api/weeklyTimetable", async (req, res) => {
     const toYmd = ymdFromDate(to);
     const endpoints = endpointsForKind(typeName || "");
     const rows = await tryTimetableEndpoints(endpoints, { officeCode, schoolCode, grade, classNo, fromYmd, toYmd });
-    // group by date
     rows.sort((a,b) => (a.date === b.date ? (Number(a.period)||0)-(Number(b.period)||0) : a.date.localeCompare(b.date)));
     res.json(rows);
   } catch (e) {
@@ -174,8 +151,7 @@ app.get("/api/weeklyTimetable", async (req, res) => {
   }
 });
 
-// 4) Daily meal (top)
-// GET /api/dailyMeal?schoolCode=&officeCode=
+// 4) Daily meal
 app.get("/api/dailyMeal", async (req, res) => {
   try {
     const { schoolCode, officeCode } = req.query;
@@ -192,8 +168,7 @@ app.get("/api/dailyMeal", async (req, res) => {
   }
 });
 
-// 5) Monthly meal (calendar)
-// GET /api/monthlyMeal?schoolCode=&officeCode=&month=YYYY-MM
+// 5) Monthly meal
 app.get("/api/monthlyMeal", async (req, res) => {
   try {
     const { schoolCode, officeCode, month } = req.query;
