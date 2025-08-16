@@ -15,7 +15,7 @@ body {
 }
 
 .container {
-  max-width: 960px;
+  max-width: 1100px;
   margin: 24px auto;
   padding: 16px;
 }
@@ -34,11 +34,21 @@ h1 {
   box-shadow: 0 6px 18px rgba(0,0,0,0.06);
 }
 
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.right { text-align: right; margin-top: 8px; }
+.hint { margin-top: 6px; color: var(--muted); font-size: 0.9em; }
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
 input[type="text"], input[type="number"], input[type="date"], input[type="month"], select {
   padding: 10px;
   border-radius: 8px;
   border: 1px solid #e6d6c8;
-  margin-right: 8px;
+  min-width: 120px;
 }
 
 button {
@@ -51,50 +61,22 @@ button {
   font-weight: 600;
   transition: transform .08s ease, box-shadow .08s ease;
 }
-
 button:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.08); }
 button:active { transform: translateY(0); }
+button:disabled { background: #ccc; cursor: not-allowed; box-shadow: none; transform: none; }
 
-/* ===================
-   📅 월간 급식 캘린더
-   =================== */
-.calendar {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 6px;
-  margin-top: 12px;
-}
-
-.calendar-day {
-  border: 1px solid #f0e6df;
-  border-radius: 6px;
-  min-height: 100px;
-  padding: 6px;
+.meal-box {
+  white-space: pre-wrap;
   background: #fff;
-  display: flex;
-  flex-direction: column;
-}
-
-.calendar-day header {
-  font-weight: bold;
-  margin-bottom: 4px;
-  color: var(--main-color);
-}
-
-.calendar-day .meal {
-  font-size: 0.85em;
-  white-space: pre-line;
-  color: #444;
-  flex-grow: 1;
-}
-
-.calendar-day.empty {
-  background: #fafafa;
-  border: none;
+  border: 1px solid #f0e6df;
+  border-radius: 8px;
+  padding: 10px;
+  min-height: 80px;
+  margin-top: 8px;
 }
 
 /* ===================
-   📘 시간표 grid
+   📘 일간/주간 시간표 grid
    =================== */
 .timetable-grid {
   display: grid;
@@ -110,22 +92,68 @@ button:active { transform: translateY(0); }
   padding: 8px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.05);
 }
+.timetable-cell .period { font-weight: bold; color: var(--main-color); }
+.timetable-cell .subject { margin-top: 4px; font-size: 0.95em; }
+.timetable-cell .teacher { margin-top: 2px; font-size: 0.8em; color: var(--muted); }
 
-.timetable-cell .period {
-  font-weight: bold;
+/* 주간: 요일 5열, 각 칸 안에 교시 카드 배치 */
+.week-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  margin-top: 12px;
+}
+.week-col {
+  background: #fff;
+  border: 1px solid #f0e6df;
+  border-radius: 10px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  min-height: 160px;
+}
+.week-col h4 {
+  margin: 0 0 6px 0;
+  color: var(--main-color);
+  font-size: 1em;
+}
+.week-col .col-body {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+
+/* ===================
+   📅 월간 급식 캘린더 (일~토)
+   =================== */
+.weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  margin-top: 8px;
+  font-weight: 700;
   color: var(--main-color);
 }
+.weekdays span { text-align: center; }
 
-.timetable-cell .subject {
-  margin-top: 4px;
-  font-size: 0.95em;
+.calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  margin-top: 6px;
 }
-
-.timetable-cell .teacher {
-  margin-top: 2px;
-  font-size: 0.8em;
-  color: var(--muted);
+.calendar-day {
+  border: 1px solid #f0e6df;
+  border-radius: 6px;
+  min-height: 110px;
+  padding: 6px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
 }
+.calendar-day header { font-weight: bold; margin-bottom: 4px; color: var(--main-color); }
+.calendar-day .meal { font-size: 0.85em; white-space: pre-line; color: #444; flex-grow: 1; }
+.calendar-day.empty { background: #fafafa; border: none; }
 
 /* modal */
 .modal {
@@ -138,24 +166,25 @@ button:active { transform: translateY(0); }
   padding: 20px;
   z-index: 999;
 }
-
 .modal[aria-hidden="false"] { display: flex; }
-
 .modal-content {
   background: white;
   border-radius: 10px;
-  max-width: 480px;
+  max-width: 520px;
   width: 100%;
   padding: 16px;
 }
-
-.modal ul { list-style: none; padding: 0; max-height: 320px; overflow: auto; margin: 8px 0; }
+.modal ul { list-style: none; padding: 0; max-height: 360px; overflow: auto; margin: 8px 0; }
 .modal li { padding: 8px 10px; border-radius: 6px; cursor: pointer; }
 .modal li:hover { background: #faf6f4; }
 
 /* responsive */
+@media (max-width: 860px) {
+  .grid-2 { grid-template-columns: 1fr; }
+  .week-grid { grid-template-columns: 1fr; }
+}
 @media (max-width: 640px) {
   .container { padding: 12px; }
-  input, button { width: 100%; margin: 6px 0; }
+  input, button { width: 100%; }
   .modal-content { padding: 12px; }
 }
