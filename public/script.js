@@ -1,6 +1,7 @@
 // helper
 const qs = id => document.getElementById(id);
-const fmtYMD = ymd => `${ymd.slice(0,4)}-${ymd.slice(4,6)}-${ymd.slice(6,8)}`;
+const pad = n => String(n).padStart(2, "0");
+const ymdToDisplay = ymd => `${ymd.slice(0,4)}-${ymd.slice(4,6)}-${ymd.slice(6,8)}`;
 
 // modal
 const modal = qs("schoolModal");
@@ -10,28 +11,26 @@ function openModal(items) {
   modalList.innerHTML = "";
   items.forEach(s => {
     const li = document.createElement("li");
-    li.innerHTML = `<strong>${s.name}</strong> <small>(${s.typeName})</small><br/><small>${s.address}</small>`;
+    li.innerHTML = `<strong>${s.name}</strong> <small>(${s.typeName || ''})</small><br/><small>${s.address || ''}</small>`;
     li.addEventListener("click", () => {
       qs("schoolCode").value = s.schoolCode;
       qs("officeCode").value = s.officeCode;
-      qs("schoolType").value = s.schoolType; // ELS/MIS/HIS
+      qs("typeName").value = s.typeName || "";
       modal.setAttribute("aria-hidden", "true");
       modal.style.display = "none";
-      // 기본 값 채우기(선택사항)
-      qs("grade").value ||= 1;
-      qs("classNo").value ||= 1;
-      qs("weekGrade").value ||= qs("grade").value;
-      qs("weekClassNo").value ||= qs("classNo").value;
-      // 월 기본값
+      // fill defaults
+      if (!qs("grade").value) qs("grade").value = 1;
+      if (!qs("classNo").value) qs("classNo").value = 1;
+      if (!qs("weekGrade").value) qs("weekGrade").value = qs("grade").value;
+      if (!qs("weekClassNo").value) qs("weekClassNo").value = qs("classNo").value;
       if (!qs("monthDate").value) {
         const now = new Date();
-        qs("monthDate").value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
+        qs("monthDate").value = `${now.getFullYear()}-${pad(now.getMonth()+1)}`;
       }
-      // 주 시작일 기본값(월요일)
       if (!qs("weekStartDate").value) {
         const d = new Date();
-        const day = d.getDay(); // 0=일
-        const diffToMon = (day === 0 ? -6 : 1 - day); // 월요일로 보정
+        const day = d.getDay();
+        const diffToMon = (day === 0 ? -6 : 1 - day);
         d.setDate(d.getDate() + diffToMon);
         qs("weekStartDate").value = d.toISOString().slice(0,10);
       }
@@ -41,13 +40,11 @@ function openModal(items) {
   modal.setAttribute("aria-hidden", "false");
   modal.style.display = "flex";
 }
-closeModalBtn.addEventListener("click", () => {
-  modal.setAttribute("aria-hidden", "true"); modal.style.display = "none";
-});
-modal.addEventListener("click", e => { if (e.target === modal) { modal.setAttribute("aria-hidden","true"); modal.style.display="none"; }});
-document.addEventListener("keydown", e => { if (e.key === "Escape") { modal.setAttribute("aria-hidden","true"); modal.style.display="none"; }});
+closeModalBtn.addEventListener("click", () => { modal.setAttribute("aria-hidden","true"); modal.style.display="none"; });
+modal.addEventListener("click", e => { if (e.target === modal) { modal.setAttribute("aria-hidden","true"); modal.style.display="none"; } });
+document.addEventListener("keydown", e => { if (e.key === "Escape") { modal.setAttribute("aria-hidden","true"); modal.style.display="none"; } });
 
-// 학교 검색
+// search school
 qs("searchSchoolBtn").addEventListener("click", async () => {
   const name = (qs("schoolName").value || "").trim();
   if (!name) return alert("학교명을 입력하세요.");
@@ -62,17 +59,19 @@ qs("searchSchoolBtn").addEventListener("click", async () => {
   }
 });
 
-// 오늘 시간표 (grid)
+// daily timetable
 qs("loadDailyTimetableBtn").addEventListener("click", async () => {
   const schoolCode = qs("schoolCode").value;
   const officeCode = qs("officeCode").value;
-  const schoolType = qs("schoolType").value;
+  const typeName = qs("typeName").value;
   const grade = qs("grade").value;
   const classNo = qs("classNo").value;
-  if (!schoolCode || !officeCode || !schoolType) return alert("학교를 선택하세요.");
+  if (!schoolCode || !officeCode) return alert("학교를 선택하세요.");
   if (!grade || !classNo) return alert("학년/반을 입력하세요.");
+
   try {
-    const res = await fetch(`/api/dailyTimetable?schoolCode=${schoolCode}&officeCode=${officeCode}&schoolType=${schoolType}&grade=${grade}&classNo=${classNo}`);
+    const url = `/api/dailyTimetable?schoolCode=${encodeURIComponent(schoolCode)}&officeCode=${encodeURIComponent(officeCode)}&grade=${encodeURIComponent(grade)}&classNo=${encodeURIComponent(classNo)}&typeName=${encodeURIComponent(typeName)}`;
+    const res = await fetch(url);
     const data = await res.json();
     const box = qs("dailyTimetable");
     box.innerHTML = "";
@@ -83,9 +82,7 @@ qs("loadDailyTimetableBtn").addEventListener("click", async () => {
     data.forEach(x => {
       const cell = document.createElement("div");
       cell.className = "timetable-cell";
-      cell.innerHTML = `<div class="period">${x.period}교시</div>
-                        <div class="subject">${x.subject || "-"}</div>
-                        <div class="teacher">${x.teacher || ""}</div>`;
+      cell.innerHTML = `<div class="period">${x.period}교시</div><div class="subject">${x.subject || "-"}</div><div class="teacher">${x.teacher || ""}</div>`;
       box.appendChild(cell);
     });
   } catch (err) {
@@ -94,13 +91,13 @@ qs("loadDailyTimetableBtn").addEventListener("click", async () => {
   }
 });
 
-// 오늘 급식
+// daily meal
 qs("loadDailyMealBtn").addEventListener("click", async () => {
   const schoolCode = qs("schoolCode").value;
   const officeCode = qs("officeCode").value;
   if (!schoolCode || !officeCode) return alert("학교를 선택하세요.");
   try {
-    const res = await fetch(`/api/dailyMeal?schoolCode=${schoolCode}&officeCode=${officeCode}`);
+    const res = await fetch(`/api/dailyMeal?schoolCode=${encodeURIComponent(schoolCode)}&officeCode=${encodeURIComponent(officeCode)}`);
     const data = await res.json();
     const el = qs("dailyMeal");
     let text = String(data.menu || "").replace(/<br\s*\/?>/gi, "\n").trim();
@@ -112,42 +109,39 @@ qs("loadDailyMealBtn").addEventListener("click", async () => {
   }
 });
 
-// 주간 시간표 (월~금 5열, 날짜별 묶음)
+// weekly timetable
 qs("loadWeeklyTimetableBtn").addEventListener("click", async () => {
   const schoolCode = qs("schoolCode").value;
   const officeCode = qs("officeCode").value;
-  const schoolType = qs("schoolType").value;
+  const typeName = qs("typeName").value;
   const grade = qs("weekGrade").value;
   const classNo = qs("weekClassNo").value;
   const startDate = qs("weekStartDate").value;
-  if (!schoolCode || !officeCode || !schoolType) return alert("학교를 선택하세요.");
+  if (!schoolCode || !officeCode) return alert("학교를 선택하세요.");
   if (!grade || !classNo || !startDate) return alert("학년/반/시작일을 입력하세요.");
 
   try {
-    const res = await fetch(`/api/weeklyTimetable?schoolCode=${schoolCode}&officeCode=${officeCode}&schoolType=${schoolType}&grade=${grade}&classNo=${classNo}&startDate=${encodeURIComponent(startDate)}`);
+    const url = `/api/weeklyTimetable?schoolCode=${encodeURIComponent(schoolCode)}&officeCode=${encodeURIComponent(officeCode)}&grade=${encodeURIComponent(grade)}&classNo=${encodeURIComponent(classNo)}&startDate=${encodeURIComponent(startDate)}&typeName=${encodeURIComponent(typeName)}`;
+    const res = await fetch(url);
     const data = await res.json();
     const weekGrid = qs("weekGrid");
     weekGrid.innerHTML = "";
 
-    // 날짜 → 교시로 그룹핑
+    // group by date
     const byDate = {};
-    data.forEach(x => {
-      (byDate[x.date] ||= []).push(x);
-    });
+    data.forEach(x => { (byDate[x.date] ||= []).push(x); });
 
-    // 월~금 생성
+    // create 5 columns (Mon-Fri) starting from startDate
     const base = new Date(startDate);
     for (let i = 0; i < 5; i++) {
-      const d = new Date(base);
-      d.setDate(base.getDate() + i);
-      const ymd = d.toISOString().slice(0,10).replace(/-/g,"");
-      const list = (byDate[ymd] || []).sort((a,b) => Number(a.period) - Number(b.period));
+      const d = new Date(base); d.setDate(base.getDate() + i);
+      const ymd = `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}`;
+      const list = (byDate[ymd] || []).sort((a,b) => (Number(a.period)||0)-(Number(b.period)||0));
 
       const col = document.createElement("div");
       col.className = "week-col";
       col.innerHTML = `<h4>${d.getMonth()+1}/${d.getDate()} (${["일","월","화","수","목","금","토"][d.getDay()]})</h4>`;
-      const body = document.createElement("div");
-      body.className = "col-body";
+      const body = document.createElement("div"); body.className = "col-body";
 
       if (list.length === 0) {
         body.innerHTML = `<div class="timetable-cell"><div class="subject">수업 정보 없음</div></div>`;
@@ -155,9 +149,7 @@ qs("loadWeeklyTimetableBtn").addEventListener("click", async () => {
         list.forEach(x => {
           const cell = document.createElement("div");
           cell.className = "timetable-cell";
-          cell.innerHTML = `<div class="period">${x.period}교시</div>
-                            <div class="subject">${x.subject || "-"}</div>
-                            <div class="teacher">${x.teacher || ""}</div>`;
+          cell.innerHTML = `<div class="period">${x.period}교시</div><div class="subject">${x.subject || "-"}</div><div class="teacher">${x.teacher || ""}</div>`;
           body.appendChild(cell);
         });
       }
@@ -170,16 +162,16 @@ qs("loadWeeklyTimetableBtn").addEventListener("click", async () => {
   }
 });
 
-// 월간 급식 (캘린더: 일~토 7열)
+// monthly meal calendar
 qs("loadMonthlyMealBtn").addEventListener("click", async () => {
   const schoolCode = qs("schoolCode").value;
   const officeCode = qs("officeCode").value;
-  const month = qs("monthDate").value;
+  const month = qs("monthDate").value; // "YYYY-MM"
   if (!schoolCode || !officeCode) return alert("학교를 선택하세요.");
   if (!month) return alert("조회월을 입력하세요.");
 
   try {
-    const res = await fetch(`/api/monthlyMeal?schoolCode=${schoolCode}&officeCode=${officeCode}&month=${encodeURIComponent(month)}`);
+    const res = await fetch(`/api/monthlyMeal?schoolCode=${encodeURIComponent(schoolCode)}&officeCode=${encodeURIComponent(officeCode)}&month=${encodeURIComponent(month)}`);
     const data = await res.json();
     renderCalendar(month, data);
   } catch (err) {
@@ -192,40 +184,29 @@ function renderCalendar(month, meals) {
   const calendar = qs("calendar");
   calendar.innerHTML = "";
 
-  const [year, mStr] = month.split("-");
-  const y = Number(year);
-  const m = Number(mStr) - 1;
-  const first = new Date(y, m, 1);
-  const last = new Date(y, m + 1, 0);
+  const [yearStr, monthStr] = month.split("-");
+  const year = Number(yearStr), mon = Number(monthStr)-1;
+  const first = new Date(year, mon, 1);
+  const last = new Date(year, mon+1, 0);
   const startWeekDay = first.getDay();
 
   const mealMap = {};
-  meals.forEach(meal => {
-    mealMap[meal.date] = (meal.menu || "").replace(/<br\s*\/?>/gi, "\n");
-  });
+  (Array.isArray(meals) ? meals : []).forEach(m => { mealMap[m.date] = (m.menu || "").replace(/<br\s*\/?>/gi, "\n"); });
 
-  // 앞쪽 빈칸
-  for (let i = 0; i < startWeekDay; i++) {
-    const div = document.createElement("div");
-    div.className = "calendar-day empty";
-    calendar.appendChild(div);
+  // leading blanks
+  for (let i=0;i<startWeekDay;i++){
+    const div = document.createElement("div"); div.className="calendar-day empty"; calendar.appendChild(div);
   }
-
-  for (let d = 1; d <= last.getDate(); d++) {
-    const dateStr = `${y}${String(m + 1).padStart(2,"0")}${String(d).padStart(2,"0")}`;
-    const div = document.createElement("div");
-    div.className = "calendar-day";
+  for (let d=1; d<=last.getDate(); d++){
+    const dateStr = `${year}${pad(mon+1)}${pad(d)}`;
+    const div = document.createElement("div"); div.className="calendar-day";
     const mealText = mealMap[dateStr] || "";
     div.innerHTML = `<header>${d}</header><div class="meal">${mealText}</div>`;
     calendar.appendChild(div);
   }
 
-  // 방학/휴무로 월 전체가 비어있는 경우 메시지
-  const hasAny = Object.keys(mealMap).length > 0;
-  if (!hasAny) {
-    const info = document.createElement("div");
-    info.style.marginTop = "8px";
-    info.textContent = "급식 정보 없음 (방학/휴무일 가능)";
-    calendar.parentElement.appendChild(info);
+  // if no meals at all, show message
+  if (!Object.keys(mealMap).length) {
+    const info = document.createElement("div"); info.style.marginTop="8px"; info.textContent="급식 정보 없음 (방학/휴무일 가능)"; calendar.parentElement.appendChild(info);
   }
 }
