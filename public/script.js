@@ -18,7 +18,7 @@ function openModal(items) {
       qs("typeName").value = s.typeName || "";
       modal.setAttribute("aria-hidden", "true");
       modal.style.display = "none";
-      // fill defaults
+      // defaults
       if (!qs("grade").value) qs("grade").value = 1;
       if (!qs("classNo").value) qs("classNo").value = 1;
       if (!qs("weekGrade").value) qs("weekGrade").value = qs("grade").value;
@@ -100,7 +100,7 @@ qs("loadDailyMealBtn").addEventListener("click", async () => {
     const res = await fetch(`/api/dailyMeal?schoolCode=${encodeURIComponent(schoolCode)}&officeCode=${encodeURIComponent(officeCode)}`);
     const data = await res.json();
     const el = qs("dailyMeal");
-    let text = String(data.menu || "").replace(/<br\s*\/?>/gi, "\n").trim();
+    let text = String(data.menu || "").replace(/<br\s*\/?>(?=\s*)/gi, "\n").trim();
     if (!text) text = "급식 정보 없음 (방학/휴무일 가능)";
     el.textContent = text;
   } catch (err) {
@@ -127,11 +127,9 @@ qs("loadWeeklyTimetableBtn").addEventListener("click", async () => {
     const weekGrid = qs("weekGrid");
     weekGrid.innerHTML = "";
 
-    // group by date
     const byDate = {};
     data.forEach(x => { (byDate[x.date] ||= []).push(x); });
 
-    // create 5 columns (Mon-Fri) starting from startDate
     const base = new Date(startDate);
     for (let i = 0; i < 5; i++) {
       const d = new Date(base); d.setDate(base.getDate() + i);
@@ -191,9 +189,8 @@ function renderCalendar(month, meals) {
   const startWeekDay = first.getDay();
 
   const mealMap = {};
-  (Array.isArray(meals) ? meals : []).forEach(m => { mealMap[m.date] = (m.menu || "").replace(/<br\s*\/?>/gi, "\n"); });
+  (Array.isArray(meals) ? meals : []).forEach(m => { mealMap[m.date] = (m.menu || "").replace(/<br\s*\/?>(?=\s*)/gi, "\n"); });
 
-  // leading blanks
   for (let i=0;i<startWeekDay;i++){
     const div = document.createElement("div"); div.className="calendar-day empty"; calendar.appendChild(div);
   }
@@ -205,7 +202,6 @@ function renderCalendar(month, meals) {
     calendar.appendChild(div);
   }
 
-  // if no meals at all, show message
   if (!Object.keys(mealMap).length) {
     const info = document.createElement("div"); info.style.marginTop="8px"; info.textContent="급식 정보 없음 (방학/휴무일 가능)"; calendar.parentElement.appendChild(info);
   }
