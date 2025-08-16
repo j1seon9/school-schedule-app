@@ -74,7 +74,7 @@ button:disabled { background: #ccc; cursor: not-allowed; box-shadow: none; trans
   margin-top: 8px;
 }
 
-/* timetable cell (reusable) */
+/* timetable cell */
 .timetable-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -92,7 +92,7 @@ button:disabled { background: #ccc; cursor: not-allowed; box-shadow: none; trans
 .timetable-cell .subject { margin-top: 6px; font-size: 0.95em; }
 .timetable-cell .teacher { margin-top: 4px; font-size: 0.85em; color: var(--muted); }
 
-/* week grid (Mon-Fri columns) */
+/* week grid */
 .week-grid-outer { margin-top: 12px; }
 .weeknames {
   display: grid;
@@ -119,7 +119,7 @@ button:disabled { background: #ccc; cursor: not-allowed; box-shadow: none; trans
 .week-col h4 { margin: 0 0 8px 0; color: var(--main-color); }
 .col-body { display: grid; gap: 8px; }
 
-/* monthly calendar (Sun-Sat) */
+/* monthly calendar */
 .weekdays {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -149,6 +149,17 @@ button:disabled { background: #ccc; cursor: not-allowed; box-shadow: none; trans
 .calendar-day .meal { font-size: 0.88em; white-space: pre-line; color: #444; flex-grow: 1; }
 .calendar-day.empty { background: #fafafa; border: none; }
 
+/* responsive */
+@media (max-width: 860px) {
+  .grid-2 { grid-template-columns: 1fr; }
+  .week-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  .container { padding: 12px; }
+  input, button { width: 100%; }
+  .modal-content { padding: 12px; }
+}
+
 /* modal */
 .modal {
   display: none;
@@ -172,13 +183,12 @@ button:disabled { background: #ccc; cursor: not-allowed; box-shadow: none; trans
 .modal li { padding: 8px 10px; border-radius: 6px; cursor: pointer; }
 .modal li:hover { background: #faf6f4; }
 
-/* responsive */
-@media (max-width: 860px) {
-  .grid-2 { grid-template-columns: 1fr; }
-  .week-grid { grid-template-columns: 1fr; }
-}
-@media (max-width: 640px) {
-  .container { padding: 12px; }
-  input, button { width: 100%; }
-  .modal-content { padding: 12px; }
-}
+
+
+
+
+
+
+
+
+
