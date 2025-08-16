@@ -35,7 +35,6 @@ h1 {
 }
 
 .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-.right { text-align: right; margin-top: 8px; }
 .hint { margin-top: 6px; color: var(--muted); font-size: 0.9em; }
 
 .grid-2 {
@@ -75,16 +74,13 @@ button:disabled { background: #ccc; cursor: not-allowed; box-shadow: none; trans
   margin-top: 8px;
 }
 
-/* ===================
-   📘 일간/주간 시간표 grid
-   =================== */
+/* timetable cell (reusable) */
 .timetable-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: 8px;
   margin-top: 12px;
 }
-
 .timetable-cell {
   background: #fff;
   border: 1px solid #f0e6df;
@@ -93,39 +89,37 @@ button:disabled { background: #ccc; cursor: not-allowed; box-shadow: none; trans
   box-shadow: 0 2px 6px rgba(0,0,0,0.05);
 }
 .timetable-cell .period { font-weight: bold; color: var(--main-color); }
-.timetable-cell .subject { margin-top: 4px; font-size: 0.95em; }
-.timetable-cell .teacher { margin-top: 2px; font-size: 0.8em; color: var(--muted); }
+.timetable-cell .subject { margin-top: 6px; font-size: 0.95em; }
+.timetable-cell .teacher { margin-top: 4px; font-size: 0.85em; color: var(--muted); }
 
-/* 주간: 요일 5열, 각 칸 안에 교시 카드 배치 */
+/* week grid (Mon-Fri columns) */
+.week-grid-outer { margin-top: 12px; }
+.weeknames {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  margin-bottom: 8px;
+  font-weight: 700;
+  color: var(--main-color);
+}
 .week-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 10px;
-  margin-top: 12px;
 }
 .week-col {
   background: #fff;
   border: 1px solid #f0e6df;
   border-radius: 10px;
   padding: 8px;
+  min-height: 160px;
   display: flex;
   flex-direction: column;
-  min-height: 160px;
 }
-.week-col h4 {
-  margin: 0 0 6px 0;
-  color: var(--main-color);
-  font-size: 1em;
-}
-.week-col .col-body {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 6px;
-}
+.week-col h4 { margin: 0 0 8px 0; color: var(--main-color); }
+.col-body { display: grid; gap: 8px; }
 
-/* ===================
-   📅 월간 급식 캘린더 (일~토)
-   =================== */
+/* monthly calendar (Sun-Sat) */
 .weekdays {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -151,8 +145,8 @@ button:disabled { background: #ccc; cursor: not-allowed; box-shadow: none; trans
   display: flex;
   flex-direction: column;
 }
-.calendar-day header { font-weight: bold; margin-bottom: 4px; color: var(--main-color); }
-.calendar-day .meal { font-size: 0.85em; white-space: pre-line; color: #444; flex-grow: 1; }
+.calendar-day header { font-weight: bold; margin-bottom: 6px; color: var(--main-color); }
+.calendar-day .meal { font-size: 0.88em; white-space: pre-line; color: #444; flex-grow: 1; }
 .calendar-day.empty { background: #fafafa; border: none; }
 
 /* modal */
