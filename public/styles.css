@@ -15,7 +15,7 @@ body {
   color: #222;
 }
 
-/* Sticky header for mobile */
+/* Sticky header */
 .app-header {
   position: sticky;
   top: 0;
@@ -37,14 +37,20 @@ body {
   color: var(--main);
   font-size: 1.1rem;
 }
-.school-quick { display: flex; gap: 8px; align-items: center; }
+.school-quick { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .school-quick input {
   padding: 10px;
   border: 1px solid #e6d6c8;
   border-radius: 8px;
   min-width: 180px;
 }
-.school-quick button { min-height: 44px; }
+.favorites select {
+  padding: 10px;
+  border: 1px solid #e6d6c8;
+  border-radius: 8px;
+  min-width: 160px;
+}
+.favorites button { min-height: 40px; }
 
 .container {
   max-width: 1100px;
@@ -80,7 +86,7 @@ button {
   cursor: pointer;
   font-weight: 600;
   transition: transform .08s ease, box-shadow .08s ease;
-  min-height: 44px; /* 모바일 터치 영역 */
+  min-height: 44px;
 }
 button:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.08); }
 button:active { transform: translateY(0); }
@@ -153,11 +159,12 @@ button:disabled { background: #ccc; cursor: not-allowed; box-shadow: none; trans
   margin-top: 8px;
   font-weight: 700;
   color: var(--main);
+  user-select: none;
 }
 .weekdays span { text-align: center; }
 .calendar {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 6px;
   margin-top: 6px;
 }
@@ -171,8 +178,19 @@ button:disabled { background: #ccc; cursor: not-allowed; box-shadow: none; trans
   flex-direction: column;
 }
 .calendar-day header { font-weight: 700; margin-bottom: 6px; color: var(--main); }
-.calendar-day .meal { font-size: 0.9em; white-space: pre-line; color: #444; flex-grow: 1; }
-.calendar-day.empty { background: #fafafa; border: none; }
+.calendar-day .meal {
+  font-size: 0.92em;
+  white-space: pre-line;
+  color: #444;
+  flex-grow: 1;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 6;       /* 기본 6줄까지 */
+  -webkit-box-orient: vertical;
+}
+.calendar-day.expanded .meal {
+  -webkit-line-clamp: unset;   /* 탭으로 전체 펼치기 */
+}
 
 /* Meal box */
 .meal-box {
@@ -219,7 +237,11 @@ button:disabled { background: #ccc; cursor: not-allowed; box-shadow: none; trans
   .school-quick input { min-width: auto; width: 100%; }
   .school-quick { gap: 6px; }
   .controls input, .controls button { width: 100%; }
-  .calendar { grid-template-columns: 1fr; }         /* 모바일: 하루 한 칸 카드형 */
-  .weekdays { display: none; }                      /* 요일 헤더 숨기고 카드로 전환 */
-  .calendar-day { min-height: 100px; }
+
+  /* 모바일: 캘린더 2열 + 텍스트 크기/높이 최적화 */
+  .weekdays { display: grid; grid-template-columns: repeat(7, 1fr); font-size: 0.9rem; }
+  .calendar { grid-template-columns: repeat(2, 1fr); }
+  .calendar-day { min-height: 110px; padding: 8px; }
+  .calendar-day header { font-size: 0.95rem; }
+  .calendar-day .meal { font-size: 0.88rem; -webkit-line-clamp: 5; }
 }
