@@ -1,106 +1,55 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8">
   <title>학교 시간표 & 급식표</title>
-  <link rel="stylesheet" href="styles.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- ✅ 모바일 최적화 -->
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div class="container">
-    <h1>📚 학교 시간표 & 🍽 급식표</h1>
-    <h3>일부 학교 시간표 안보임</h3>
+    <h1>📚 학교 시간표 & 급식표</h1>
+    <h3>일부학교 시간표 안보임</h3>
 
-    <!-- 학교 검색 & 즐겨찾기 -->
-    <section class="card">
+    <!-- 학교 검색 -->
+    <div class="card">
       <h2>학교 검색</h2>
-      <div class="row gap">
-        <input id="schoolName" type="text" placeholder="학교명을 입력하세요" />
-        <select id="filterKind" title="학교급">
-          <option value="">전체</option>
-          <option value="초등학교">초등학교</option>
-          <option value="중학교">중학교</option>
-          <option value="고등학교">고등학교</option>
-        </select>
-        <select id="filterCoedu" title="성별">
-          <option value="">공학/남/여</option>
-          <option value="남녀공학">남녀공학</option>
-          <option value="남">남</option>
-          <option value="여">여</option>
-        </select>
-        <input id="filterSpec" type="text" placeholder="특성화/특수/자사고 등" />
-        <button id="searchSchoolBtn">검색</button>
-      </div>
-
-      <div class="row gap mt8">
-        <button id="saveFavoriteBtn">⭐ 즐겨찾기 저장</button>
-        <select id="favorites"></select>
-        <button id="loadFavoriteBtn">불러오기</button>
-        <button id="clearFavoriteBtn">즐겨찾기 삭제</button>
-      </div>
-
-      <input id="schoolCode" type="hidden" />
-      <input id="officeCode" type="hidden" />
-      <input id="kindName" type="hidden" />
-      <div class="note">검색 후 결과에서 학교를 선택하세요. (초/중/고 자동 전환)</div>
-    </section>
-
-    <!-- 상단: 일간 -->
-    <section class="grid-2 card">
-      <div>
-        <h2>오늘 시간표</h2>
-        <div class="row gap">
-          <label>학년 <input id="grade" type="number" min="1" /></label>
-          <label>반 <input id="classNo" type="number" min="1" /></label>
-          <button id="loadTimetableBtn">조회</button>
-        </div>
-        <ul id="timetable" class="mt8"></ul>
-      </div>
-
-      <div>
-        <h2>오늘 급식</h2>
-        <div class="row gap">
-          <button id="loadDailyMealBtn">조회</button>
-        </div>
-        <div id="dailyMeal" class="mt8 monospace" aria-live="polite">조회된 급식이 없습니다.</div>
-      </div>
-    </section>
-
-    <!-- 주간 시간표 (그룹) -->
-    <section class="card">
-      <h2>주간 시간표 (5일)</h2>
-      <div class="row gap">
-        <label>학년 <input id="weekGrade" type="number" min="1" /></label>
-        <label>반 <input id="weekClassNo" type="number" min="1" /></label>
-        <label>시작일 <input id="weekStartDate" type="date" /></label>
-        <button id="loadWeeklyTimetableBtn">조회</button>
-      </div>
-      <div id="weeklyWrap" class="week-grid mt8"></div>
-    </section>
-
-    <!-- 월간 급식: 캘린더(Grid, 주단위 행) -->
-    <section class="card">
-      <h2>월간 급식 캘린더</h2>
-      <div class="row gap">
-        <label>기준일 <input id="mealBaseDate" type="date" /></label>
-        <button id="loadMonthlyMealBtn">조회</button>
-      </div>
-      <div id="mealCalendar" class="calendar mt8" aria-live="polite"></div>
-    </section>
-
-  </div>
-
-  <!-- 검색결과 모달 -->
-  <div id="schoolModal" class="modal" aria-hidden="true">
-    <div class="modal-content">
-      <h3>검색 결과</h3>
+      <input type="text" id="schoolName" placeholder="학교명 입력">
+      <button id="searchSchoolBtn">검색</button>
       <ul id="schoolList"></ul>
-      <div class="row right mt8">
-        <button id="closeModalBtn">닫기</button>
-      </div>
+    </div>
+
+    <!-- 저장된 학교 -->
+    <div class="card">
+      <h2>🎓 선택된 학교</h2>
+      <div id="selectedSchool">학교를 검색하세요.</div>
+    </div>
+
+    <!-- 오늘 시간표 -->
+    <div class="card">
+      <h2>오늘 시간표</h2>
+      <ul id="dailyTimetable"></ul>
+    </div>
+
+    <!-- 주간 시간표 -->
+    <div class="card">
+      <h2>주간 시간표</h2>
+      <table id="weeklyTimetable"></table>
+    </div>
+
+    <!-- 오늘 급식 -->
+    <div class="card">
+      <h2>오늘 급식</h2>
+      <pre id="dailyMeal">조회된 급식 없음</pre>
+    </div>
+
+    <!-- 월간 급식 -->
+    <div class="card">
+      <h2>월간 급식</h2>
+      <div class="calendar" id="monthlyMeal"></div>
     </div>
   </div>
 
-  <script defer src="script.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
