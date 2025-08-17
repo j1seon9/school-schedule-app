@@ -26,7 +26,7 @@ app.use(compression());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
-// -------- 공통 유틸 --------
+// -------- utils --------
 async function fetchJson(url, retries = 3, baseDelay = 400) {
   let lastErr;
   for (let i = 0; i < retries; i++) {
@@ -36,9 +36,7 @@ async function fetchJson(url, retries = 3, baseDelay = 400) {
       return await r.json();
     } catch (e) {
       lastErr = e;
-      if (i < retries - 1) {
-        await new Promise((r) => setTimeout(r, baseDelay * 2 ** i));
-      }
+      if (i < retries - 1) await new Promise((r) => setTimeout(r, baseDelay * 2 ** i));
     }
   }
   throw lastErr;
@@ -49,7 +47,7 @@ const todayYMD = () => {
   return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`;
 };
 
-// -------- 헬스체크 --------
+// -------- health --------
 app.get("/healthz", (req, res) => res.status(200).json({ ok: true, t: Date.now() }));
 app.get("/health", (req, res) => {
   res.type("html").send(`<!doctype html><html><head><meta charset="utf-8"><title>Health</title></head>
@@ -63,24 +61,20 @@ app.get("/health", (req, res) => {
 </body></html>`);
 });
 
-// -------- 학교 검색 --------
+// -------- search school --------
 app.get("/api/searchSchool", async (req, res) => {
   const name = (req.query.name || "").trim();
   if (!name) return res.json([]);
-
   try {
-    const url = `${NEIS_BASE}/schoolInfo?KEY=${API_KEY}&Type=json&SCHUL_NM=${encodeURIComponent(
-      name
-    )}`;
+    const url = `${NEIS_BASE}/schoolInfo?KEY=${API_KEY}&Type=json&SCHUL_NM=${encodeURIComponent(name)}`;
     const j = await fetchJson(url);
     const rows = j.schoolInfo?.[1]?.row || [];
-
     const result = rows.map((r) => ({
       name: r.SCHUL_NM,
       schoolCode: r.SD_SCHUL_CODE,
       officeCode: r.ATPT_OFCDC_SC_CODE,
-      typeName: r.SCHUL_KND_SC_NM || "", // 초/중/고/각종(특수/특성화 포함)
-      gender: r.COEDU_SC_NM || "", // 남/여/남여공학
+      typeName: r.SCHUL_KND_SC_NM || "",
+      gender: r.COEDU_SC_NM || "",
       address: r.ORG_RDNMA || "",
     }));
     res.json(result);
@@ -90,29 +84,18 @@ app.get("/api/searchSchool", async (req, res) => {
   }
 });
 
-// 학교종류→타임테이블 엔드포인트 후보
+// -------- timetable endpoint selection --------
 function endpointsForKind(kindName = "") {
-  const k = (kindName || "").trim(); // “초등학교”, “중학교”, “고등학교”, “각종학교(…)” 등
+  const k = (kindName || "").trim();
   if (k.includes("초")) return ["elsTimetable", "misTimetable", "hisTimetable", "spsTimetable"];
   if (k.includes("중")) return ["misTimetable", "hisTimetable", "elsTimetable", "spsTimetable"];
   if (k.includes("고")) return ["hisTimetable", "misTimetable", "elsTimetable", "spsTimetable"];
-  // 특수/특성화/각종 등은 모두 시도
-  return ["hisTimetable", "misTimetable", "elsTimetable", "spsTimetable"];
+  return ["hisTimetable", "misTimetable", "elsTimetable", "spsTimetable"]; // 특수/특성화/각종 등
 }
 
-// 실제로 가능한 필드에서 교사명 추출
 function pickTeacher(row) {
-  return (
-    row.TEACHER ||
-    row.TCH_NM ||
-    row.TM_TN ||
-    row.INST_NM ||
-    row.TCR_NM ||
-    row.TN ||
-    ""
-  );
+  return row.TEACHER || row.TCH_NM || row.TM_TN || row.INST_NM || row.TCR_NM || row.TN || "";
 }
-// 교시/과목 추출
 function pickPeriod(row) {
   return row.PERIO || row.PERIOD || row.PER || row.ORD || "";
 }
@@ -120,7 +103,6 @@ function pickSubject(row) {
   return row.ITRT_CNTNT || row.SUBJECT || row.SJ_NM || row.SJ || "";
 }
 
-// 엔드포인트 시도
 async function tryTimetableEndpoints({ officeCode, schoolCode, grade, classNo, date, typeName }) {
   const tries = endpointsForKind(typeName);
   for (const ep of tries) {
@@ -140,30 +122,18 @@ async function tryTimetableEndpoints({ officeCode, schoolCode, grade, classNo, d
           teacher: pickTeacher(t),
         }));
       }
-    } catch (_) {
-      // ignore and try next
-    }
+    } catch (_) { /* try next */ }
   }
   return [];
 }
 
-// -------- 일간 시간표 --------
+// -------- daily timetable --------
 app.get("/api/dailyTimetable", async (req, res) => {
   try {
     const { schoolCode, officeCode, grade, classNo, typeName = "" } = req.query;
     if (!schoolCode || !officeCode || !grade || !classNo) return res.json([]);
-
     const d = todayYMD();
-    const rows = await tryTimetableEndpoints({
-      officeCode,
-      schoolCode,
-      grade,
-      classNo,
-      date: d,
-      typeName,
-    });
-
-    // 교시순 정렬
+    const rows = await tryTimetableEndpoints({ officeCode, schoolCode, grade, classNo, date: d, typeName });
     rows.sort((a, b) => Number(a.period) - Number(b.period));
     res.json(rows);
   } catch (err) {
@@ -172,28 +142,19 @@ app.get("/api/dailyTimetable", async (req, res) => {
   }
 });
 
-// -------- 주간 시간표 (월~금) --------
+// -------- weekly timetable (Mon-Fri) --------
 app.get("/api/weeklyTimetable", async (req, res) => {
   try {
     const { schoolCode, officeCode, grade, classNo, startDate, typeName = "" } = req.query;
     if (!schoolCode || !officeCode || !grade || !classNo || !startDate) return res.json([]);
-
     const sd = String(startDate).replace(/-/g, "");
     const base = new Date(`${sd.slice(0, 4)}-${sd.slice(4, 6)}-${sd.slice(6, 8)}`);
     const results = [];
-
     for (let i = 0; i < 5; i++) {
       const d = new Date(base);
       d.setDate(base.getDate() + i);
       const ymd = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`;
-      const rows = await tryTimetableEndpoints({
-        officeCode,
-        schoolCode,
-        grade,
-        classNo,
-        date: ymd,
-        typeName,
-      });
+      const rows = await tryTimetableEndpoints({ officeCode, schoolCode, grade, classNo, date: ymd, typeName });
       rows.sort((a, b) => Number(a.period) - Number(b.period));
       results.push(...rows);
     }
@@ -204,7 +165,7 @@ app.get("/api/weeklyTimetable", async (req, res) => {
   }
 });
 
-// -------- 급식 (일간/월간) --------
+// -------- meals --------
 app.get("/api/dailyMeal", async (req, res) => {
   try {
     const { schoolCode, officeCode, date } = req.query;
@@ -227,24 +188,18 @@ app.get("/api/monthlyMeal", async (req, res) => {
   try {
     const { schoolCode, officeCode, month } = req.query; // "YYYY-MM"
     if (!schoolCode || !officeCode || !month) return res.json([]);
-
     const [y, m] = month.split("-");
     const first = `${y}${pad(m)}01`;
     const lastDate = new Date(Number(y), Number(m), 0).getDate();
     const last = `${y}${pad(m)}${pad(lastDate)}`;
-
     const url = `${NEIS_BASE}/mealServiceDietInfo?KEY=${API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${encodeURIComponent(
       officeCode
     )}&SD_SCHUL_CODE=${encodeURIComponent(
       schoolCode
     )}&MLSV_FROM_YMD=${first}&MLSV_TO_YMD=${last}`;
-
     const j = await fetchJson(url);
     const arr = j.mealServiceDietInfo?.[1]?.row || [];
-    const rows = arr.map((r) => ({
-      date: r.MLSV_YMD,
-      menu: r.DDISH_NM || "",
-    }));
+    const rows = arr.map((r) => ({ date: r.MLSV_YMD, menu: r.DDISH_NM || "" }));
     res.json(rows);
   } catch (err) {
     console.error("monthlyMeal error:", err);
