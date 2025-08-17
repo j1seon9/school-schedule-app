@@ -1,91 +1,75 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>학교 시간표 & 급식표</title>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css"/>
 </head>
 <body>
   <div class="container">
-    <h1>📚 학교 시간표 & 🍽 급식표</h1>
-    <h3>일부 학교 시간표 안보임</h3>
+    <h1>📚 학교 시간표 & 🍴 급식표</h1>
+    <h3>일부학교 시간표 표시 안됨</h3>
 
     <!-- 학교 검색 -->
-    <section class="card">
+    <div class="card">
       <h2>학교 검색</h2>
-      <div>
-        <input id="schoolName" type="text" placeholder="학교명을 입력하세요" />
-        <button id="searchSchoolBtn">검색</button>
-        <button id="favoriteBtn">⭐ 즐겨찾기</button>
-      </div>
-      <input id="schoolCode" type="hidden" />
-      <input id="officeCode" type="hidden" />
-      <input id="schoolType" type="hidden" />
-      <div style="margin-top:8px;">
-        <small>검색 후 팝업에서 학교를 선택하세요.</small>
-      </div>
-    </section>
+      <input type="text" id="schoolName" placeholder="학교명 입력"/>
+      <button id="searchSchoolBtn">검색</button>
+      <input type="hidden" id="schoolCode"/>
+      <input type="hidden" id="officeCode"/>
+      <p id="selectedSchool"></p>
+    </div>
 
-    <!-- 오늘 시간표 -->
-    <section class="card">
-      <h2>오늘 시간표</h2>
+    <!-- 즐겨찾기 -->
+    <div class="card">
+      <h2>즐겨찾기</h2>
+      <button id="saveFavorite">현재 학급 저장</button>
+      <button id="loadFavorite">즐겨찾기 불러오기</button>
+    </div>
+
+    <!-- 오늘 시간표 & 급식 -->
+    <div class="card">
+      <h2>오늘 일정</h2>
       <div>
-        <label>학년: <input id="grade" type="number" min="1" /></label>
-        <label>반: <input id="classNo" type="number" min="1" /></label>
-        <button id="loadTimetableBtn">조회</button>
+        학년: <input type="number" id="grade" min="1" max="6"/>
+        반: <input type="number" id="classNo" min="1" max="20"/>
+        <button id="loadTodayBtn">조회</button>
       </div>
-      <ul id="timetable"></ul>
-    </section>
+      <h3>🕒 오늘 시간표</h3>
+      <ul id="dailyTimetable"></ul>
+
+      <h3>🍱 오늘 급식</h3>
+      <pre id="dailyMeal"></pre>
+    </div>
 
     <!-- 주간 시간표 -->
-    <section class="card">
+    <div class="card">
       <h2>주간 시간표</h2>
-      <div>
-        <label>학년: <input id="weekGrade" type="number" min="1" /></label>
-        <label>반: <input id="weekClassNo" type="number" min="1" /></label>
-        <label>시작일: <input id="weekStartDate" type="date" /></label>
-        <button id="loadWeeklyTimetableBtn">조회</button>
-      </div>
-      <div id="weeklyGrid" class="grid-week"></div>
-    </section>
-
-    <!-- 오늘 급식 -->
-    <section class="card">
-      <h2>오늘 급식</h2>
-      <div>
-        <button id="loadDailyMealBtn">조회</button>
-      </div>
-      <div id="dailyMeal" aria-live="polite" style="white-space:pre-wrap; margin-top:8px;">조회된 급식이 없습니다.</div>
-    </section>
+      시작일: <input type="date" id="weekStartDate"/>
+      학년: <input type="number" id="weekGrade"/>
+      반: <input type="number" id="weekClassNo"/>
+      <button id="loadWeeklyBtn">조회</button>
+      <div id="weeklyGrid"></div>
+    </div>
 
     <!-- 월간 급식 -->
-    <section class="card">
-      <h2>월간 급식</h2>
-      <div>
-        <button id="loadMonthlyMealBtn">이번 달 조회</button>
-      </div>
-      <div class="calendar-grid">
-        <div class="calendar-header">
-          <div>일</div><div>월</div><div>화</div>
-          <div>수</div><div>목</div><div>금</div><div>토</div>
-        </div>
-        <div id="monthlyMealGrid" class="calendar-body"></div>
-      </div>
-    </section>
+    <div class="card">
+      <h2>월간 급식표</h2>
+      기준일: <input type="date" id="mealMonthDate"/>
+      <button id="loadMonthlyMealBtn">조회</button>
+      <div id="monthlyMealGrid" class="calendar"></div>
+    </div>
   </div>
 
   <!-- 모달 -->
   <div id="schoolModal" class="modal" aria-hidden="true">
     <div class="modal-content">
-      <h3>검색 결과</h3>
+      <button id="closeModalBtn">닫기</button>
       <ul id="schoolList"></ul>
-      <div style="text-align:right; margin-top:8px;">
-        <button id="closeModalBtn">닫기</button>
-      </div>
     </div>
   </div>
 
-  <script defer src="script.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
