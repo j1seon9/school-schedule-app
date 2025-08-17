@@ -1,177 +1,155 @@
-// ===== Helpers =====
-const qs = (id) => document.getElementById(id);
-const pad = (n) => String(n).padStart(2, "0");
-const weekday = (d) => ["일", "월", "화", "수", "목", "금", "토"][d.getDay()];
+// public/script.js
 
-// storage keys
-const LS_FAVORITES = "ssapp:favorites";
-const LS_CLASS_FOR_SCHOOL = (schoolCode) => `ssapp:class:${schoolCode}`;
+// ===== helpers =====
+const qs = (id) => document.getElementById(id);
+const formatYMD = (ymd) => {
+  const s = String(ymd || "");
+  if (s.length === 8) return `${s.slice(0,4)}-${s.slice(4,6)}-${s.slice(6,8)}`;
+  return s;
+};
+const ymd = (date) => date.toISOString().slice(0,10).replace(/-/g,'');
+
+// LocalStorage Keys
+const LS_LAST = "ss:lastSelection";
+const LS_FAVORITES = "ss:favorites";
 
 // ===== Modal =====
 const modal = qs("schoolModal");
 const modalList = qs("schoolList");
 const closeModalBtn = qs("closeModalBtn");
-
-function openModal(items) {
+function openModal(items){
   modalList.innerHTML = "";
-  items.forEach((s) => {
+  items.forEach(s => {
     const li = document.createElement("li");
-    li.innerHTML = `
-      <strong>${s.name}</strong>
-      <small> (${s.typeName || "미상"}, ${s.gender || "미상"})</small><br/>
-      <small>${s.address || ""}</small>
-    `;
-    li.addEventListener("click", () => selectSchool(s));
+    li.innerHTML = `<strong>${s.name}</strong> <small>(${s.kindName || ""} · ${s.coeduName || ""})</small><br><small>${s.address || ""}</small>`;
+    li.addEventListener("click", ()=>{
+      qs("schoolCode").value = s.schoolCode;
+      qs("officeCode").value = s.officeCode;
+      qs("kindName").value = s.kindName || "";
+      // 자동 입력 보조
+      tryAutoLoadClass();
+      modal.setAttribute("aria-hidden","true");
+      modal.style.display="none";
+    });
     modalList.appendChild(li);
   });
-  modal.setAttribute("aria-hidden", "false");
-  modal.style.display = "flex";
+  modal.setAttribute("aria-hidden","false");
+  modal.style.display="flex";
 }
-function closeModal() {
-  modal.setAttribute("aria-hidden", "true");
-  modal.style.display = "none";
+function closeModal(){
+  modal.setAttribute("aria-hidden","true");
+  modal.style.display="none";
 }
 closeModalBtn.addEventListener("click", closeModal);
-modal.addEventListener("click", (e) => { if (e.target === modal) closeModal(); });
-document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
+modal.addEventListener("click", (e)=>{ if(e.target===modal) closeModal(); });
+document.addEventListener("keydown", (e)=>{ if (e.key==="Escape") closeModal(); });
 
-// ===== Favorites =====
-function loadFavorites() {
-  try {
-    return JSON.parse(localStorage.getItem(LS_FAVORITES) || "[]");
-  } catch { return []; }
-}
-function saveFavorites(list) {
-  localStorage.setItem(LS_FAVORITES, JSON.stringify(list));
-}
-function refreshFavoriteSelect() {
-  const sel = qs("favoriteSelect");
-  const prev = sel.value;
-  sel.innerHTML = `<option value="">⭐ 즐겨찾기</option>`;
-  loadFavorites().forEach((s) => {
+// ===== 즐겨찾기 =====
+function loadFavoritesIntoSelect(){
+  const sel = qs("favorites");
+  sel.innerHTML = "";
+  const favorites = JSON.parse(localStorage.getItem(LS_FAVORITES) || "[]");
+  if (favorites.length === 0) {
     const opt = document.createElement("option");
-    opt.value = s.schoolCode;
-    opt.textContent = `${s.name} (${s.typeName || ""})`;
-    opt.dataset.payload = JSON.stringify(s);
+    opt.value = ""; opt.textContent = "즐겨찾기 없음";
+    sel.appendChild(opt);
+    return;
+  }
+  favorites.forEach((f, idx)=>{
+    const opt = document.createElement("option");
+    opt.value = String(idx);
+    opt.textContent = `${f.name} (${f.kindName || ""}) / ${f.grade || "-"}-${f.classNo || "-"}`;
     sel.appendChild(opt);
   });
-  sel.value = prev || "";
 }
-qs("favoriteSelect").addEventListener("change", (e) => {
-  const code = e.target.value;
-  if (!code) return;
-  const opt = e.target.selectedOptions[0];
-  try {
-    const s = JSON.parse(opt.dataset.payload);
-    selectSchool(s, { autoLoad: true });
-  } catch {}
-});
-qs("addFavoriteBtn").addEventListener("click", () => {
-  const s = currentSchool();
-  if (!s) return alert("먼저 학교를 선택하세요.");
-  const list = loadFavorites();
-  if (list.some((x) => x.schoolCode === s.schoolCode)) return alert("이미 즐겨찾기에 있습니다.");
-  list.push(s);
-  saveFavorites(list);
-  refreshFavoriteSelect();
-  alert("즐겨찾기에 추가되었습니다.");
-});
-qs("removeFavoriteBtn").addEventListener("click", () => {
-  const sel = qs("favoriteSelect");
-  const code = sel.value;
-  if (!code) return alert("삭제할 즐겨찾기를 선택하세요.");
-  const list = loadFavorites().filter((x) => x.schoolCode !== code);
-  saveFavorites(list);
-  refreshFavoriteSelect();
-  sel.value = "";
-  alert("즐겨찾기에서 제거했습니다.");
-});
-
-// ===== School state =====
-function setSchoolState(s) {
-  qs("schoolCode").value = s.schoolCode;
-  qs("officeCode").value = s.officeCode;
-  qs("typeName").value = s.typeName || "";
-  qs("gender").value = s.gender || "";
-  qs("address").value = s.address || "";
-  qs("infoName").textContent = s.name;
-  qs("infoType").textContent = s.typeName || "-";
-  qs("infoGender").textContent = s.gender || "-";
-  qs("infoAddr").textContent = s.address || "-";
-  qs("schoolInfo").hidden = false;
-}
-function currentSchool() {
+function saveFavorite(){
   const schoolCode = qs("schoolCode").value;
-  if (!schoolCode) return null;
-  return {
-    name: qs("infoName").textContent,
-    schoolCode,
-    officeCode: qs("officeCode").value,
-    typeName: qs("typeName").value,
-    gender: qs("gender").value,
-    address: qs("address").value,
-  };
-}
-
-// 학급 저장/복원
-function saveClassForSchool(schoolCode, { grade, classNo }) {
-  if (!schoolCode) return;
-  localStorage.setItem(LS_CLASS_FOR_SCHOOL(schoolCode), JSON.stringify({ grade, classNo }));
-}
-function loadClassForSchool(schoolCode) {
-  try {
-    const raw = localStorage.getItem(LS_CLASS_FOR_SCHOOL(schoolCode));
-    return raw ? JSON.parse(raw) : null;
-  } catch { return null; }
-}
-
-// 학교 선택 처리 (옵션: autoLoad)
-function selectSchool(s, { autoLoad = true } = {}) {
-  setSchoolState(s);
-
-  // 기본 입력값
-  const now = new Date();
-  if (!qs("monthDate").value) qs("monthDate").value = `${now.getFullYear()}-${pad(now.getMonth() + 1)}`;
-  if (!qs("weekStartDate").value) {
-    const d = new Date();
-    const dow = d.getDay();
-    const diffToMon = dow === 0 ? -6 : 1 - dow;
-    d.setDate(d.getDate() + diffToMon);
-    qs("weekStartDate").value = d.toISOString().slice(0, 10);
-  }
-
-  // 학교별 학급 복원
-  const saved = loadClassForSchool(s.schoolCode);
-  if (saved) {
-    qs("grade").value = saved.grade;
-    qs("classNo").value = saved.classNo;
-    qs("weekGrade").value = saved.grade;
-    qs("weekClassNo").value = saved.classNo;
-  } else {
-    if (!qs("grade").value) qs("grade").value = 1;
-    if (!qs("classNo").value) qs("classNo").value = 1;
-    qs("weekGrade").value = qs("grade").value;
-    qs("weekClassNo").value = qs("classNo").value;
-  }
-
-  closeModal();
-  refreshFavoriteSelect();
-
-  // 자동 조회
-  if (autoLoad) {
-    loadDailyTimetable();
-    loadDailyMeal();
-    loadWeeklyTimetable();
-    loadMonthlyMeal();
-  }
-}
-
-// ===== Search =====
-qs("searchSchoolBtn").addEventListener("click", async () => {
+  const officeCode = qs("officeCode").value;
+  const kindName = qs("kindName").value;
   const name = (qs("schoolName").value || "").trim();
+  const grade = qs("grade").value || qs("weekGrade").value;
+  const classNo = qs("classNo").value || qs("weekClassNo").value;
+  if (!schoolCode || !officeCode || !name) return alert("학교 선택 후 저장하세요.");
+
+  const favorites = JSON.parse(localStorage.getItem(LS_FAVORITES) || "[]");
+  favorites.push({ name, schoolCode, officeCode, kindName, grade, classNo, savedAt: Date.now() });
+  localStorage.setItem(LS_FAVORITES, JSON.stringify(favorites));
+  loadFavoritesIntoSelect();
+  alert("즐겨찾기에 저장했습니다.");
+}
+function loadFavorite(){
+  const sel = qs("favorites");
+  const idx = sel.value;
+  const favorites = JSON.parse(localStorage.getItem(LS_FAVORITES) || "[]");
+  const f = favorites[Number(idx)];
+  if (!f) return;
+  qs("schoolName").value = f.name;
+  qs("schoolCode").value = f.schoolCode;
+  qs("officeCode").value = f.officeCode;
+  qs("kindName").value = f.kindName || "";
+  qs("grade").value = f.grade || "";
+  qs("classNo").value = f.classNo || "";
+  qs("weekGrade").value = f.grade || "";
+  qs("weekClassNo").value = f.classNo || "";
+  // 자동 로딩
+  runDaily();
+  runWeekly();
+  runMonthly();
+}
+function clearFavorite(){
+  localStorage.removeItem(LS_FAVORITES);
+  loadFavoritesIntoSelect();
+  alert("즐겨찾기를 모두 삭제했습니다.");
+}
+loadFavoritesIntoSelect();
+
+qs("saveFavoriteBtn").addEventListener("click", saveFavorite);
+qs("loadFavoriteBtn").addEventListener("click", loadFavorite);
+qs("clearFavoriteBtn").addEventListener("click", clearFavorite);
+
+// ===== 마지막 선택 자동 불러오기 =====
+function saveLastSelection(){
+  const data = {
+    schoolName: qs("schoolName").value,
+    schoolCode: qs("schoolCode").value,
+    officeCode: qs("officeCode").value,
+    kindName: qs("kindName").value,
+    grade: qs("grade").value,
+    classNo: qs("classNo").value
+  };
+  localStorage.setItem(LS_LAST, JSON.stringify(data));
+}
+function tryAutoLoadLast(){
+  const raw = localStorage.getItem(LS_LAST);
+  if (!raw) return;
+  const d = JSON.parse(raw);
+  qs("schoolName").value = d.schoolName || "";
+  qs("schoolCode").value = d.schoolCode || "";
+  qs("officeCode").value = d.officeCode || "";
+  qs("kindName").value = d.kindName || "";
+  qs("grade").value = d.grade || "";
+  qs("classNo").value = d.classNo || "";
+  qs("weekGrade").value = d.grade || "";
+  qs("weekClassNo").value = d.classNo || "";
+}
+function tryAutoLoadClass(){
+  // 초/중/고에 따라 학년 기본값 안내 (선택적)
+}
+
+// ===== 학교 검색 =====
+qs("searchSchoolBtn").addEventListener("click", async ()=>{
+  const name = (qs("schoolName").value || "").trim();
+  const kind = qs("filterKind").value;
+  const coedu = qs("filterCoedu").value;
+  const spec = (qs("filterSpec").value || "").trim();
   if (!name) return alert("학교명을 입력하세요.");
+
   try {
-    const res = await fetch(`/api/searchSchool?name=${encodeURIComponent(name)}`);
+    const url = `/api/searchSchool?name=${encodeURIComponent(name)}`
+      + (kind ? `&kind=${encodeURIComponent(kind)}` : "")
+      + (coedu ? `&coedu=${encodeURIComponent(coedu)}` : "")
+      + (spec ? `&spec=${encodeURIComponent(spec)}` : "");
+    const res = await fetch(url);
     const data = await res.json();
     if (!Array.isArray(data) || data.length === 0) return alert("검색 결과가 없습니다.");
     openModal(data);
@@ -181,196 +159,194 @@ qs("searchSchoolBtn").addEventListener("click", async () => {
   }
 });
 
-// ===== Daily Timetable/Meal =====
-async function loadDailyTimetable() {
-  const s = currentSchool();
-  if (!s) return alert("학교를 먼저 선택하세요.");
+// ===== 오늘 시간표 =====
+qs("loadTimetableBtn").addEventListener("click", runDaily);
+async function runDaily(){
+  const schoolCode = qs("schoolCode").value;
+  const officeCode = qs("officeCode").value;
   const grade = qs("grade").value;
   const classNo = qs("classNo").value;
+  const kindName = qs("kindName").value;
+  if (!schoolCode || !officeCode) return alert("학교를 선택하세요.");
   if (!grade || !classNo) return alert("학년/반을 입력하세요.");
 
   try {
-    const url = `/api/dailyTimetable?schoolCode=${encodeURIComponent(s.schoolCode)}&officeCode=${encodeURIComponent(s.officeCode)}&grade=${encodeURIComponent(grade)}&classNo=${encodeURIComponent(classNo)}&typeName=${encodeURIComponent(s.typeName)}`;
+    const url = `/api/dailyTimetable?schoolCode=${schoolCode}&officeCode=${officeCode}&grade=${grade}&classNo=${classNo}&kindName=${encodeURIComponent(kindName)}`;
     const res = await fetch(url);
     const data = await res.json();
-
-    // 학급 저장
-    saveClassForSchool(s.schoolCode, { grade, classNo });
-
-    const box = qs("dailyTimetable");
-    box.innerHTML = "";
+    const ul = qs("timetable");
+    ul.innerHTML = "";
     if (!Array.isArray(data) || data.length === 0) {
-      box.innerHTML = `<div class="timetable-cell"><div class="subject">오늘 시간표 정보가 없습니다.</div></div>`;
+      ul.textContent = "시간표 정보가 없습니다.";
       return;
     }
-    data.forEach((x) => {
-      const cell = document.createElement("div");
-      cell.className = "timetable-cell";
-      cell.innerHTML = `
-        <div class="period">${x.period || "-"}교시</div>
-        <div class="subject">${x.subject || "-"}</div>
-        <div class="teacher">${x.teacher || ""}</div>
-      `;
-      box.appendChild(cell);
+    data.sort((a,b)=>Number(a.period)-Number(b.period));
+    data.forEach(item=>{
+      const li = document.createElement("li");
+      const teacher = item.teacher ? ` (${item.teacher})` : "";
+      li.textContent = `${item.period}교시: ${item.subject}${teacher}`;
+      ul.appendChild(li);
     });
+    saveLastSelection();
   } catch (err) {
     console.error(err);
     alert("시간표 조회 중 오류가 발생했습니다.");
   }
 }
-async function loadDailyMeal() {
-  const s = currentSchool();
-  if (!s) return alert("학교를 먼저 선택하세요.");
+
+// ===== 주간 시간표 (요일 카드로 묶어 표시) =====
+qs("loadWeeklyTimetableBtn").addEventListener("click", runWeekly);
+async function runWeekly(){
+  const schoolCode = qs("schoolCode").value;
+  const officeCode = qs("officeCode").value;
+  const grade = qs("weekGrade").value || qs("grade").value;
+  const classNo = qs("weekClassNo").value || qs("classNo").value;
+  const startDateEl = qs("weekStartDate");
+  const kindName = qs("kindName").value;
+
+  if (!schoolCode || !officeCode) return alert("학교를 선택하세요.");
+  if (!grade || !classNo || !startDateEl.value) return alert("학년/반/시작일을 입력하세요.");
+
+  const startDate = startDateEl.value.replace(/-/g,"");
   try {
-    const res = await fetch(`/api/dailyMeal?schoolCode=${encodeURIComponent(s.schoolCode)}&officeCode=${encodeURIComponent(s.officeCode)}`);
-    const data = await res.json();
-    const el = qs("dailyMeal");
-    const txt = (data?.menu || "").replace(/<br\s*\/?>/gi, "\n").trim();
-    el.textContent = txt || "급식 정보 없음";
-  } catch (err) {
-    console.error(err);
-    alert("오늘 급식 조회 중 오류가 발생했습니다.");
-  }
-}
-qs("loadDailyTimetableBtn").addEventListener("click", loadDailyTimetable);
-qs("loadDailyMealBtn").addEventListener("click", loadDailyMeal);
-
-// ===== Weekly Timetable =====
-async function loadWeeklyTimetable() {
-  const s = currentSchool();
-  if (!s) return alert("학교를 먼저 선택하세요.");
-  const grade = qs("weekGrade").value;
-  const classNo = qs("weekClassNo").value;
-  const startDate = qs("weekStartDate").value;
-  if (!grade || !classNo || !startDate) return alert("학년/반/시작일을 입력하세요.");
-
-  // 학급 저장(주간에서도 저장)
-  saveClassForSchool(s.schoolCode, { grade, classNo });
-
-  try {
-    const url = `/api/weeklyTimetable?schoolCode=${encodeURIComponent(s.schoolCode)}&officeCode=${encodeURIComponent(s.officeCode)}&grade=${encodeURIComponent(grade)}&classNo=${encodeURIComponent(classNo)}&startDate=${encodeURIComponent(startDate)}&typeName=${encodeURIComponent(s.typeName)}`;
+    const url = `/api/weeklyTimetable?schoolCode=${schoolCode}&officeCode=${officeCode}&grade=${grade}&classNo=${classNo}&startDate=${startDate}&kindName=${encodeURIComponent(kindName)}`;
     const res = await fetch(url);
     const data = await res.json();
+    const wrap = qs("weeklyWrap");
+    wrap.innerHTML = "";
 
-    const weekGrid = qs("weekGrid");
-    weekGrid.innerHTML = "";
+    const days = data?.days || {};
+    const dates = Object.keys(days).sort();
+    if (dates.length === 0) {
+      wrap.innerHTML = `<div class="note">주간 시간표 정보가 없습니다.</div>`;
+      return;
+    }
 
-    // 날짜별 그룹
-    const byDate = {};
-    data.forEach((x) => { (byDate[x.date] ||= []).push(x); });
+    dates.forEach(d=>{
+      const list = days[d] || [];
+      const card = document.createElement("div");
+      card.className = "day-card";
+      const title = document.createElement("h4");
+      title.textContent = formatYMD(d);
+      card.appendChild(title);
 
-    // 월~금 5일 컬럼
-    const base = new Date(startDate);
-    for (let i = 0; i < 5; i++) {
-      const d = new Date(base);
-      d.setDate(base.getDate() + i);
-      const ymd = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`;
-      const list = (byDate[ymd] || []).sort((a, b) => Number(a.period) - Number(b.period));
-
-      const col = document.createElement("div");
-      col.className = "week-col";
-      col.innerHTML = `<h4>${d.getMonth() + 1}/${d.getDate()} (${weekday(d)})</h4>`;
-      const body = document.createElement("div");
-      body.className = "col-body";
-
+      const ul = document.createElement("ul");
       if (list.length === 0) {
-        body.innerHTML = `<div class="timetable-cell"><div class="subject">수업 정보 없음</div></div>`;
+        const li = document.createElement("li");
+        li.textContent = "수업 없음";
+        ul.appendChild(li);
       } else {
-        list.forEach((x) => {
-          const cell = document.createElement("div");
-          cell.className = "timetable-cell";
-          cell.innerHTML = `
-            <div class="period">${x.period || "-"}교시</div>
-            <div class="subject">${x.subject || "-"}</div>
-            <div class="teacher">${x.teacher || ""}</div>
-          `;
-          body.appendChild(cell);
+        list.forEach(item=>{
+          const li = document.createElement("li");
+          const teacher = item.teacher ? ` (${item.teacher})` : "";
+          li.textContent = `${item.period}교시: ${item.subject}${teacher}`;
+          ul.appendChild(li);
         });
       }
-      col.appendChild(body);
-      weekGrid.appendChild(col);
-    }
+      card.appendChild(ul);
+      wrap.appendChild(card);
+    });
+
+    saveLastSelection();
   } catch (err) {
     console.error(err);
     alert("주간 시간표 조회 중 오류가 발생했습니다.");
   }
 }
-qs("loadWeeklyTimetableBtn").addEventListener("click", loadWeeklyTimetable);
 
-// ===== Monthly Meal =====
-async function loadMonthlyMeal() {
-  const s = currentSchool();
-  if (!s) return alert("학교를 먼저 선택하세요.");
-  const month = qs("monthDate").value;
-  if (!month) return alert("조회월을 입력하세요.");
+// ===== 오늘 급식 =====
+qs("loadDailyMealBtn").addEventListener("click", async ()=>{
+  const schoolCode = qs("schoolCode").value;
+  const officeCode = qs("officeCode").value;
+  if (!schoolCode || !officeCode) return alert("학교를 선택하세요.");
+
   try {
-    const res = await fetch(`/api/monthlyMeal?schoolCode=${encodeURIComponent(s.schoolCode)}&officeCode=${encodeURIComponent(s.officeCode)}&month=${encodeURIComponent(month)}`);
+    const res = await fetch(`/api/dailyMeal?schoolCode=${schoolCode}&officeCode=${officeCode}`);
     const data = await res.json();
-    renderCalendar(month, data);
+    const el = qs("dailyMeal");
+    if (!data || !data.menu) { el.textContent = "급식 정보 없음 (방학/휴무일)"; return; }
+    el.textContent = String(data.menu).replace(/<br\s*\/?>/gi, "\n");
+  } catch (err) {
+    console.error(err);
+    alert("오늘 급식 조회 중 오류가 발생했습니다.");
+  }
+});
+
+// ===== 월간 급식 (달력 Grid, 주단위 행) =====
+qs("loadMonthlyMealBtn").addEventListener("click", runMonthly);
+async function runMonthly(){
+  const schoolCode = qs("schoolCode").value;
+  const officeCode = qs("officeCode").value;
+  const base = qs("mealBaseDate").value || new Date().toISOString().slice(0,10);
+  if (!schoolCode || !officeCode) return alert("학교를 선택하세요.");
+
+  try {
+    const res = await fetch(`/api/monthlyMeal?schoolCode=${schoolCode}&officeCode=${officeCode}&baseDate=${base}`);
+    const list = await res.json(); // [{date, menu}]
+    const map = {};
+    list.forEach(r => { map[r.date] = (r.menu || "").replace(/<br\s*\/?>/gi, "\n"); });
+
+    const cal = qs("mealCalendar");
+    cal.innerHTML = "";
+
+    // 머리 (일~토)
+    const heads = ["일","월","화","수","목","금","토"];
+    heads.forEach(h => {
+      const hd = document.createElement("div");
+      hd.className = "cal-head";
+      hd.textContent = h;
+      cal.appendChild(hd);
+    });
+
+    // 이번 달 범위 만들기
+    const d = new Date(base);
+    const year = d.getFullYear();
+    const month = d.getMonth(); // 0-based
+    const first = new Date(year, month, 1);
+    const last = new Date(year, month + 1, 0);
+
+    // 시작 공백 채우기
+    for (let i = 0; i < first.getDay(); i++) {
+      cal.appendChild(document.createElement("div"));
+    }
+
+    // 날짜 칸
+    for (let day = 1; day <= last.getDate(); day++) {
+      const cell = document.createElement("div");
+      cell.className = "cal-cell";
+      const thisDate = new Date(year, month, day);
+      const ymdKey = ymd(thisDate);
+
+      const dateEl = document.createElement("div");
+      dateEl.className = "cal-date";
+      dateEl.textContent = String(day);
+      cell.appendChild(dateEl);
+
+      const menu = map[ymdKey];
+      const menuEl = document.createElement("div");
+      menuEl.className = "cal-menu";
+      if (menu && menu.trim()) {
+        menuEl.textContent = menu;
+      } else {
+        menuEl.textContent = "급식 정보 없음";
+        menuEl.classList.add("cal-muted");
+      }
+      cell.appendChild(menuEl);
+
+      cal.appendChild(cell);
+    }
+
+    saveLastSelection();
   } catch (err) {
     console.error(err);
     alert("월간 급식 조회 중 오류가 발생했습니다.");
   }
 }
-qs("loadMonthlyMealBtn").addEventListener("click", loadMonthlyMeal);
 
-function renderCalendar(month, meals) {
-  const calendar = qs("calendar");
-  calendar.innerHTML = "";
-
-  const [y, m] = month.split("-");
-  const year = Number(y);
-  const mon = Number(m) - 1;
-  const first = new Date(year, mon, 1);
-  const last = new Date(year, mon + 1, 0);
-  const startWeekDay = first.getDay();
-
-  const mealMap = {};
-  (Array.isArray(meals) ? meals : []).forEach((x) => {
-    mealMap[x.date] = (x.menu || "").replace(/<br\s*\/?>/gi, "\n").trim();
-  });
-
-  // 앞 빈칸
-  for (let i = 0; i < startWeekDay; i++) {
-    const div = document.createElement("div");
-    div.className = "calendar-day empty";
-    calendar.appendChild(div);
-  }
-
-  // 날짜 셀
-  for (let d = 1; d <= last.getDate(); d++) {
-    const dateStr = `${year}${pad(mon + 1)}${pad(d)}`;
-    const div = document.createElement("div");
-    div.className = "calendar-day";
-    const text = mealMap[dateStr] || "";
-    div.innerHTML = `<header>${d}</header><div class="meal">${text || ""}</div>`;
-    // 탭으로 펼치기/접기
-    div.addEventListener("click", () => {
-      if (!text) return; // 빈칸은 무시
-      div.classList.toggle("expanded");
-    });
-    calendar.appendChild(div);
-  }
-
-  // 방학/휴무일 안내
-  const infoEl = document.querySelector(".calendar-info");
-  if (infoEl) infoEl.remove();
-  if (!Object.keys(mealMap).length) {
-    const info = document.createElement("div");
-    info.className = "calendar-info";
-    info.style.marginTop = "8px";
-    info.textContent = "급식 정보 없음 (방학/휴무일 가능)";
-    calendar.parentElement.appendChild(info);
-  }
-}
-
-// ===== Init =====
-(function init() {
-  refreshFavoriteSelect();
-  // 기본 월 설정
-  const md = qs("monthDate");
-  if (!md.value) {
-    const now = new Date();
-    md.value = `${now.getFullYear()}-${pad(now.getMonth() + 1)}`;
-  }
+// 초기화: 마지막 선택 불러오기 & 오늘 날짜 넣기
+(function init(){
+  tryAutoLoadLast();
+  const today = new Date().toISOString().slice(0,10);
+  const mealBase = qs("mealBaseDate"); if (mealBase) mealBase.value = today;
+  const weekStart = qs("weekStartDate"); if (weekStart) weekStart.value = today;
 })();
