@@ -1,55 +1,91 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>학교 시간표 & 급식표</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- ✅ 모바일 최적화 -->
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <div class="container">
-    <h1>📚 학교 시간표 & 급식표</h1>
-    <h3>일부학교 시간표 안보임</h3>
+    <h1>📚 학교 시간표 & 🍽 급식표</h1>
+    <h3>일부 학교 시간표 안보임</h3>
 
     <!-- 학교 검색 -->
-    <div class="card">
+    <section class="card">
       <h2>학교 검색</h2>
-      <input type="text" id="schoolName" placeholder="학교명 입력">
-      <button id="searchSchoolBtn">검색</button>
-      <ul id="schoolList"></ul>
-    </div>
-
-    <!-- 저장된 학교 -->
-    <div class="card">
-      <h2>🎓 선택된 학교</h2>
-      <div id="selectedSchool">학교를 검색하세요.</div>
-    </div>
+      <div>
+        <input id="schoolName" type="text" placeholder="학교명을 입력하세요" />
+        <button id="searchSchoolBtn">검색</button>
+        <button id="favoriteBtn">⭐ 즐겨찾기</button>
+      </div>
+      <input id="schoolCode" type="hidden" />
+      <input id="officeCode" type="hidden" />
+      <input id="schoolType" type="hidden" />
+      <div style="margin-top:8px;">
+        <small>검색 후 팝업에서 학교를 선택하세요.</small>
+      </div>
+    </section>
 
     <!-- 오늘 시간표 -->
-    <div class="card">
+    <section class="card">
       <h2>오늘 시간표</h2>
-      <ul id="dailyTimetable"></ul>
-    </div>
+      <div>
+        <label>학년: <input id="grade" type="number" min="1" /></label>
+        <label>반: <input id="classNo" type="number" min="1" /></label>
+        <button id="loadTimetableBtn">조회</button>
+      </div>
+      <ul id="timetable"></ul>
+    </section>
 
     <!-- 주간 시간표 -->
-    <div class="card">
+    <section class="card">
       <h2>주간 시간표</h2>
-      <table id="weeklyTimetable"></table>
-    </div>
+      <div>
+        <label>학년: <input id="weekGrade" type="number" min="1" /></label>
+        <label>반: <input id="weekClassNo" type="number" min="1" /></label>
+        <label>시작일: <input id="weekStartDate" type="date" /></label>
+        <button id="loadWeeklyTimetableBtn">조회</button>
+      </div>
+      <div id="weeklyGrid" class="grid-week"></div>
+    </section>
 
     <!-- 오늘 급식 -->
-    <div class="card">
+    <section class="card">
       <h2>오늘 급식</h2>
-      <pre id="dailyMeal">조회된 급식 없음</pre>
-    </div>
+      <div>
+        <button id="loadDailyMealBtn">조회</button>
+      </div>
+      <div id="dailyMeal" aria-live="polite" style="white-space:pre-wrap; margin-top:8px;">조회된 급식이 없습니다.</div>
+    </section>
 
     <!-- 월간 급식 -->
-    <div class="card">
+    <section class="card">
       <h2>월간 급식</h2>
-      <div class="calendar" id="monthlyMeal"></div>
+      <div>
+        <button id="loadMonthlyMealBtn">이번 달 조회</button>
+      </div>
+      <div class="calendar-grid">
+        <div class="calendar-header">
+          <div>일</div><div>월</div><div>화</div>
+          <div>수</div><div>목</div><div>금</div><div>토</div>
+        </div>
+        <div id="monthlyMealGrid" class="calendar-body"></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- 모달 -->
+  <div id="schoolModal" class="modal" aria-hidden="true">
+    <div class="modal-content">
+      <h3>검색 결과</h3>
+      <ul id="schoolList"></ul>
+      <div style="text-align:right; margin-top:8px;">
+        <button id="closeModalBtn">닫기</button>
+      </div>
     </div>
   </div>
 
-  <script src="script.js"></script>
+  <script defer src="script.js"></script>
 </body>
 </html>
