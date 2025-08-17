@@ -6,26 +6,22 @@
 }
 
 * { box-sizing: border-box; }
-
 body {
   font-family: 'Noto Sans KR', system-ui, sans-serif;
   background: var(--bg-color);
   margin: 0;
   color: #222;
 }
-
 .container {
   max-width: 960px;
   margin: 24px auto;
   padding: 16px;
 }
-
 h1 {
   text-align: center;
   color: var(--main-color);
   margin-bottom: 12px;
 }
-
 .card {
   background: var(--card-bg);
   border-radius: 12px;
@@ -33,60 +29,64 @@ h1 {
   margin-bottom: 16px;
   box-shadow: 0 6px 18px rgba(0,0,0,0.06);
 }
-
-input[type="text"], input[type="number"], input[type="date"] {
-  padding: 8px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  margin-right: 6px;
+input, button, select {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #e6d6c8;
+  margin: 4px 2px;
 }
-
 button {
-  padding: 8px 10px;
-  border-radius: 6px;
   background: var(--main-color);
-  color: white;
-  border: none;
+  color: #fff;
+  font-weight: bold;
   cursor: pointer;
-  font-weight: 600;
 }
 button:hover { opacity: 0.9; }
+ul { padding-left: 1em; }
 
-ul#timetable { margin-top: 10px; padding-left: 1.2em; }
+pre {
+  background: #fafafa;
+  padding: 10px;
+  border-radius: 6px;
+  white-space: pre-wrap;
+}
 
-.grid-week {
+/* 주간 시간표 grid */
+#weeklyGrid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 8px;
-  overflow-x: auto;
 }
-.grid-week > div {
-  background: #fff;
-  border: 1px solid #eee;
+.week-day {
+  border: 1px solid #ddd;
+  border-radius: 8px;
   padding: 6px;
-  border-radius: 6px;
+  background: #fff;
+}
+.week-day h4 {
+  text-align: center;
+  margin: 0 0 6px;
 }
 
-.calendar-grid {
-  overflow-x: auto;
-}
-.calendar-header, .calendar-body {
+/* 월간 급식 grid */
+.calendar {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
 }
-.calendar-header div {
-  text-align: center;
-  font-weight: bold;
-  background: var(--main-color);
-  color: white;
-  padding: 4px;
-}
-.calendar-body div {
-  min-height: 80px;
+.day-cell {
   border: 1px solid #eee;
+  border-radius: 6px;
+  min-height: 80px;
   padding: 4px;
   font-size: 0.85em;
-  overflow-wrap: break-word;
+  background: #fff;
+}
+.day-cell strong {
+  display: block;
+  text-align: center;
+  margin-bottom: 4px;
+  color: var(--main-color);
 }
 
 /* modal */
@@ -94,24 +94,29 @@ ul#timetable { margin-top: 10px; padding-left: 1.2em; }
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.45);
-  align-items: center;
+  background: rgba(0,0,0,0.4);
   justify-content: center;
+  align-items: center;
 }
 .modal[aria-hidden="false"] { display: flex; }
 .modal-content {
-  background: white;
-  border-radius: 10px;
-  max-width: 480px;
-  width: 100%;
+  background: #fff;
   padding: 16px;
+  border-radius: 8px;
+  width: 320px;
 }
-.modal ul { list-style: none; padding: 0; margin: 0; max-height: 320px; overflow-y: auto; }
-.modal li { padding: 8px; cursor: pointer; }
-.modal li:hover { background: #f2f2f2; }
+.modal-content ul { list-style: none; padding: 0; }
+.modal-content li {
+  padding: 8px;
+  cursor: pointer;
+}
+.modal-content li:hover {
+  background: #f9f3ef;
+  border-radius: 4px;
+}
 
 /* responsive */
 @media (max-width: 640px) {
-  input, button { width: 100%; margin: 6px 0; }
-  .grid-week { grid-template-columns: 1fr; }
+  #weeklyGrid { grid-template-columns: 1fr; }
+  .calendar { grid-template-columns: repeat(7, minmax(40px, 1fr)); }
 }
