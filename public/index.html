@@ -10,15 +10,25 @@
   <header class="app-header">
     <div class="header-inner">
       <h1>📚 시간표 & 🍽 급식표</h1>
+      <h3>일부 학교 시간표 조회 안됨</h3>
       <div class="school-quick">
         <input id="schoolName" type="text" placeholder="학교명 (예: 서울여고)" />
         <button id="searchSchoolBtn" aria-label="학교 검색">검색</button>
+
+        <!-- 즐겨찾기 -->
+        <div class="favorites">
+          <select id="favoriteSelect" title="즐겨찾기 학교 선택">
+            <option value="">⭐ 즐겨찾기</option>
+          </select>
+          <button id="addFavoriteBtn" title="현재 선택 학교 즐겨찾기 추가">⭐ 추가</button>
+          <button id="removeFavoriteBtn" title="선택한 즐겨찾기 삭제">🗑 제거</button>
+        </div>
       </div>
     </div>
   </header>
 
   <main class="container">
-    <!-- 학교 정보 상태 -->
+    <!-- 학교 정보 -->
     <section class="card info-card" id="schoolInfo" hidden>
       <div class="info-content">
         <div><strong>학교</strong> <span id="infoName">-</span></div>
@@ -28,7 +38,7 @@
       </div>
     </section>
 
-    <!-- 상단: 일간 시간표/급식 -->
+    <!-- 상단: 일간 -->
     <section class="grid-2">
       <div class="card">
         <h2>오늘 시간표</h2>
@@ -62,7 +72,7 @@
       </div>
     </section>
 
-    <!-- 월간 급식 달력 -->
+    <!-- 월간 급식 -->
     <section class="card">
       <h2>월간 급식</h2>
       <div class="row controls">
@@ -76,7 +86,7 @@
     </section>
   </main>
 
-  <!-- 모달 -->
+  <!-- 검색 모달 -->
   <div id="schoolModal" class="modal" aria-hidden="true">
     <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
       <h3 id="modalTitle">검색 결과</h3>
@@ -87,7 +97,7 @@
     </div>
   </div>
 
-  <!-- 히든 상태값 -->
+  <!-- 히든 -->
   <input id="schoolCode" type="hidden" />
   <input id="officeCode" type="hidden" />
   <input id="typeName" type="hidden" />
