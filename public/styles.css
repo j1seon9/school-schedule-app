@@ -1,81 +1,78 @@
-:root{
-  --main:#ff7f50;
-  --bg:#fff8f2;
-  --card:#fff;
-  --muted:#666;
-  --line:#f0e6df;
+:root {
+  --main-color: #4cafef;
+  --bg-color: #f8faff;
+  --card-bg: #ffffff;
 }
 
-*{box-sizing:border-box}
-body{
-  font-family:'Noto Sans KR',system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
-  background:var(--bg);
-  color:#222;
-  margin:0;
-}
-.container{max-width:1000px;margin:24px auto;padding:16px}
-h1{text-align:center;color:var(--main);margin-bottom:12px}
-.card{
-  background:var(--card);border-radius:12px;padding:14px;margin-bottom:16px;
-  box-shadow:0 6px 18px rgba(0,0,0,.06)
-}
-.row{display:flex;align-items:center}
-.right{justify-content:flex-end}
-.gap>*{margin-right:8px}
-.gap>*:last-child{margin-right:0}
-.mt8{margin-top:8px}
-.note{color:var(--muted);font-size:.9rem;margin-top:6px}
-.monospace{white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
-input[type="text"],input[type="number"],input[type="date"],select{
-  padding:10px;border-radius:8px;border:1px solid #e6d6c8
+body {
+  font-family: 'Noto Sans KR', sans-serif;
+  background: var(--bg-color);
+  color: #222;
 }
-button{
-  padding:10px 12px;border-radius:8px;background:var(--main);color:#fff;border:none;
-  cursor:pointer;font-weight:700;transition:transform .08s ease, box-shadow .08s ease
-}
-button:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,.08)}
-button:active{transform:translateY(0)}
-ul#timetable{padding-left:1.2em;margin-top:12px}
-li{line-height:1.5}
 
-.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.week-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
-.day-card{border:1px solid var(--line);border-radius:10px;padding:10px;background:#fff}
-.day-card h4{margin:0 0 6px 0;color:#333}
-.day-card ul{padding-left:1.2em;margin:0}
-
-.calendar{
-  display:grid;
-  grid-template-columns:repeat(7,1fr);
-  gap:6px;
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 12px;
 }
-.cal-head{font-weight:700;text-align:center;padding:8px;background:var(--main);color:#fff;border-radius:8px}
-.cal-cell{
-  border:1px solid var(--line);border-radius:10px;min-height:88px;background:#fff;display:flex;flex-direction:column;
-  padding:8px
-}
-.cal-date{font-weight:700;margin-bottom:4px}
-.cal-menu{font-size:.92rem;color:#333;white-space:pre-wrap}
-.cal-muted{color:var(--muted);font-style:italic}
 
-.modal{
-  display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);
-  align-items:center;justify-content:center;padding:20px;z-index:999
+h1 {
+  text-align: center;
+  margin: 12px 0;
+  color: var(--main-color);
 }
-.modal[aria-hidden="false"]{display:flex}
-.modal-content{background:#fff;border-radius:10px;max-width:520px;width:100%;padding:16px}
-.modal ul{list-style:none;padding:0;max-height:380px;overflow:auto;margin:8px 0}
-.modal li{padding:10px;border-radius:8px;cursor:pointer;border:1px solid transparent}
-.modal li:hover{background:#faf6f4;border-color:#f0e6df}
 
-/* 모바일 최적화 */
-@media (max-width:760px){
-  .container{padding:12px}
-  .grid-2{grid-template-columns:1fr}
-  .week-grid{grid-template-columns:1fr}
-  .calendar{grid-template-columns:repeat(7, minmax(36px, 1fr))}
-  input,button,select{width:100%;margin:6px 0}
-  .gap>*{margin-right:0}
-  .cal-cell{min-height:72px;padding:6px}
+.card {
+  background: var(--card-bg);
+  padding: 12px;
+  margin: 10px 0;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+button {
+  padding: 8px 12px;
+  background: var(--main-color);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+button:hover { opacity: 0.9; }
+
+ul { list-style: none; padding-left: 0; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+th, td {
+  padding: 6px;
+  border: 1px solid #ddd;
+  text-align: center;
+}
+
+.calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+.calendar .day {
+  min-height: 80px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 4px;
+  font-size: 0.8em;
+  overflow: hidden;
+}
+.calendar .day strong { display: block; margin-bottom: 4px; color: var(--main-color); }
+
+/* ✅ 모바일 최적화 */
+@media (max-width: 640px) {
+  .container { padding: 6px; }
+  .card { padding: 8px; }
+  button, input { width: 100%; margin: 6px 0; }
+  .calendar .day { font-size: 0.7em; min-height: 60px; }
 }
