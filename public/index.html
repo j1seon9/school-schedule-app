@@ -11,11 +11,13 @@
     <h1>📚 학교 시간표 & 🍴 급식표</h1>
     <h3>일부학교 시간표 표시 안됨</h3>
 
-    <!-- 학교 검색 -->
+    <!-- 학교 검색 + 학년/반 -->
     <div class="card">
       <h2>학교 검색</h2>
       <input type="text" id="schoolName" placeholder="학교명 입력"/>
       <button id="searchSchoolBtn">검색</button>
+      학년: <input type="number" id="grade" min="1" max="6"/>
+      반: <input type="number" id="classNo" min="1" max="20"/>
       <input type="hidden" id="schoolCode"/>
       <input type="hidden" id="officeCode"/>
       <p id="selectedSchool"></p>
@@ -28,17 +30,12 @@
       <button id="loadFavorite">즐겨찾기 불러오기</button>
     </div>
 
-    <!-- 오늘 시간표 & 급식 -->
+    <!-- 오늘 일정 -->
     <div class="card">
       <h2>오늘 일정</h2>
-      <div>
-        학년: <input type="number" id="grade" min="1" max="6"/>
-        반: <input type="number" id="classNo" min="1" max="20"/>
-        <button id="loadTodayBtn">조회</button>
-      </div>
+      <button id="loadTodayBtn">조회</button>
       <h3>🕒 오늘 시간표</h3>
       <ul id="dailyTimetable"></ul>
-
       <h3>🍱 오늘 급식</h3>
       <pre id="dailyMeal"></pre>
     </div>
@@ -46,9 +43,6 @@
     <!-- 주간 시간표 -->
     <div class="card">
       <h2>주간 시간표</h2>
-      시작일: <input type="date" id="weekStartDate"/>
-      학년: <input type="number" id="weekGrade"/>
-      반: <input type="number" id="weekClassNo"/>
       <button id="loadWeeklyBtn">조회</button>
       <div id="weeklyGrid"></div>
     </div>
@@ -56,8 +50,6 @@
     <!-- 월간 급식 -->
     <div class="card">
       <h2>월간 급식표</h2>
-      기준일: <input type="date" id="mealMonthDate"/>
-      <button id="loadMonthlyMealBtn">조회</button>
       <div id="monthlyMealGrid" class="calendar"></div>
     </div>
   </div>
