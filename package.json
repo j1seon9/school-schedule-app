@@ -1,6 +1,6 @@
 {
   "name": "school-schedule-app",
-  "version": "1.0.0",
+  "version": "1.0.10",
   "description": "학교 시간표 및 급식표 웹앱 (NEIS)",
   "main": "server.js",
   "type": "module",
