@@ -54,7 +54,7 @@ pre {
 /* 주간 시간표 grid */
 #weeklyGrid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: 8px;
 }
 .week-day {
@@ -68,7 +68,7 @@ pre {
 /* 월간 급식 grid */
 .calendar {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(40px, 1fr));
   gap: 6px;
 }
 .day-cell {
