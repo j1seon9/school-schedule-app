@@ -1,4 +1,3 @@
-// server.js
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -17,7 +16,6 @@ app.use(express.static(path.join(__dirname, "public")));
 
 const API_KEY = process.env.API_KEY;
 
-// --- Helper Functions ---
 function formatDate(date) {
   return date.toISOString().slice(0,10).replace(/-/g,"");
 }
@@ -54,7 +52,6 @@ app.get("/api/dailyTimetable", async (req, res) => {
     const url = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${officeCode}&SD_SCHUL_CODE=${schoolCode}&MLSV_FROM_YMD=${date}&MLSV_TO_YMD=${date}`;
     const r = await fetch(url);
     const data = await r.json();
-    // 일간 시간표 데이터 변환
     const timetable = data.mealServiceDietInfo?.[1]?.row?.map(item => ({
       period: "급식",
       subject: item.DDISH_NM,
@@ -81,7 +78,7 @@ app.get("/api/weeklyTimetable", async (req, res) => {
     const r = await fetch(url);
     const data = await r.json();
     const weekly = data.mealServiceDietInfo?.[1]?.row?.map(item => ({
-      date: item.DDISH_NM ? item.MLSV_YMD : "",
+      date: item.MLSV_YMD,
       period: "급식",
       subject: item.DDISH_NM,
       teacher: ""
