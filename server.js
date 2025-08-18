@@ -1,6 +1,6 @@
+// ====== server.js ======
 import dotenv from "dotenv";
 dotenv.config();
-
 import express from "express";
 import fetch from "node-fetch";
 import path from "path";
@@ -17,26 +17,14 @@ const API_KEY = process.env.API_KEY;
 // 정적 파일 서빙
 app.use(express.static(path.join(__dirname, "public")));
 
-// ===== KST 기준 날짜 함수 =====
-function getTodayKST() {
-  const now = new Date();
-  const kstTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
-  return kstTime.toISOString().slice(0, 10).replace(/-/g, "");
-}
-
-// HTML과 알레르기 숫자 제거
-function cleanMenu(menu) {
-  return menu.replace(/<[^>]+>/g, "").replace(/\([0-9.,]+\)/g, "");
-}
-
 // ===== 헬스체크 =====
 app.get("/health", (req, res) => {
-  res.json({ status: "ok", timestamp: new Date().toLocaleString("ko-KR", { timeZone: "Asia/Seoul" }) });
+  res.json({ status: "서버 정상 작동중", timestamp: new Date().toLocaleString("ko-KR", { timeZone: "Asia/Seoul" }) });
 });
 
-// ===== 학교 검색 + 학년/반 선택 =====
+// ===== 학교 검색 =====
 app.get("/api/searchSchool", async (req, res) => {
-  const { name, grade, classNo } = req.query;
+  const { name } = req.query;
   if (!name) return res.status(400).json({ error: "학교명을 입력하세요." });
 
   try {
@@ -47,18 +35,13 @@ app.get("/api/searchSchool", async (req, res) => {
     if (!j.schoolInfo) return res.json([]);
     const rows = j.schoolInfo[1].row;
 
-    let result = rows.map((s) => ({
+    const result = rows.map((s) => ({
       name: s.SCHUL_NM,
       schoolCode: s.SD_SCHUL_CODE,
       officeCode: s.ATPT_OFCDC_SC_CODE,
       type: s.SCHUL_KND_SC_NM,
       gender: s.COEDU_SC_NM,
     }));
-
-    // 학년/반 필터링
-    if (grade) result = result.filter((r) => r.grade == grade);
-    if (classNo) result = result.filter((r) => r.classNo == classNo);
-
     res.json(result);
   } catch (err) {
     console.error(err);
@@ -72,7 +55,8 @@ app.get("/api/dailyTimetable", async (req, res) => {
   if (!schoolCode || !officeCode || !grade || !classNo)
     return res.status(400).json({ error: "파라미터 누락" });
 
-  const date = getTodayKST();
+  const today = new Date().toLocaleString("ko-KR", { timeZone: "Asia/Seoul" });
+  const date = today.split(" ")[0].replace(/\./g, "");
 
   try {
     const url = `https://open.neis.go.kr/hub/hisTimetable?KEY=${API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${officeCode}&SD_SCHUL_CODE=${schoolCode}&ALL_TI_YMD=${date}&GRADE=${grade}&CLASS_NM=${classNo}`;
@@ -95,11 +79,17 @@ app.get("/api/dailyTimetable", async (req, res) => {
   }
 });
 
-// ===== 주간 시간표 =====
+// ===== 주간 시간표 (해당 주 월요일 기준) =====
 app.get("/api/weeklyTimetable", async (req, res) => {
-  const { schoolCode, officeCode, grade, classNo, startDate } = req.query;
-  if (!schoolCode || !officeCode || !grade || !classNo || !startDate)
+  const { schoolCode, officeCode, grade, classNo } = req.query;
+  if (!schoolCode || !officeCode || !grade || !classNo)
     return res.status(400).json({ error: "파라미터 누락" });
+
+  const today = new Date(new Date().toLocaleString("ko-KR", { timeZone: "Asia/Seoul" }));
+  const day = today.getDay();
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - day + 1); // 월요일 기준
+  const startDate = monday.toISOString().slice(0, 10).replace(/-/g, "");
 
   try {
     const url = `https://open.neis.go.kr/hub/hisTimetable?KEY=${API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${officeCode}&SD_SCHUL_CODE=${schoolCode}&TI_FROM_YMD=${startDate}&TI_TO_YMD=${startDate}&GRADE=${grade}&CLASS_NM=${classNo}`;
@@ -128,7 +118,7 @@ app.get("/api/dailyMeal", async (req, res) => {
   if (!schoolCode || !officeCode)
     return res.status(400).json({ error: "파라미터 누락" });
 
-  const today = getTodayKST();
+  const today = new Date().toLocaleString("ko-KR", { timeZone: "Asia/Seoul" }).split(" ")[0].replace(/\./g, "");
 
   try {
     const url = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${officeCode}&SD_SCHUL_CODE=${schoolCode}&MLSV_YMD=${today}`;
@@ -138,7 +128,7 @@ app.get("/api/dailyMeal", async (req, res) => {
     if (!j.mealServiceDietInfo) return res.json({ menu: null });
     const rows = j.mealServiceDietInfo[1].row;
 
-    const menu = rows.map((m) => cleanMenu(m.DDISH_NM)).join("\n");
+    const menu = rows.map((m) => m.DDISH_NM.replace(/<br\/?>/g, ", ")).join("\n");
     res.json({ menu });
   } catch (err) {
     console.error(err);
@@ -146,11 +136,18 @@ app.get("/api/dailyMeal", async (req, res) => {
   }
 });
 
-// ===== 월간 급식 =====
+// ===== 월간 급식 (조회일 기준 해당 달) =====
 app.get("/api/monthlyMeal", async (req, res) => {
-  const { schoolCode, officeCode, startDate, endDate } = req.query;
-  if (!schoolCode || !officeCode || !startDate || !endDate)
+  const { schoolCode, officeCode } = req.query;
+  if (!schoolCode || !officeCode)
     return res.status(400).json({ error: "파라미터 누락" });
+
+  const today = new Date(new Date().toLocaleString("ko-KR", { timeZone: "Asia/Seoul" }));
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, "0");
+
+  const startDate = `${yyyy}${mm}01`;
+  const endDate = `${yyyy}${mm}31`;
 
   try {
     const url = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${officeCode}&SD_SCHUL_CODE=${schoolCode}&MLSV_FROM_YMD=${startDate}&MLSV_TO_YMD=${endDate}`;
@@ -162,7 +159,7 @@ app.get("/api/monthlyMeal", async (req, res) => {
 
     const result = rows.map((r) => ({
       date: r.MLSV_YMD,
-      menu: cleanMenu(r.DDISH_NM),
+      menu: r.DDISH_NM.replace(/<br\/?>/g, ", "),
     }));
     res.json(result);
   } catch (err) {
@@ -173,5 +170,5 @@ app.get("/api/monthlyMeal", async (req, res) => {
 
 // 서버 실행
 app.listen(PORT, () => {
-  console.log(`✅ Server running at http://localhost:${PORT}`);
+  console.log(`✅ Server running on port ${PORT}`);
 });
