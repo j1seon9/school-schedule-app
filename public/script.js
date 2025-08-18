@@ -15,6 +15,7 @@ function openModal(items) {
       qs("officeCode").value = s.officeCode;
       qs("selectedSchool").textContent = `${s.name} (${s.type})`;
       modal.setAttribute("aria-hidden", "true");
+      loadMonthlyMeal();
     });
     modalList.appendChild(li);
   });
@@ -37,7 +38,7 @@ qs("searchSchoolBtn").addEventListener("click", async () => {
   }
 });
 
-// 오늘 일정 (시간표 + 급식)
+// 오늘 일정
 qs("loadTodayBtn").addEventListener("click", async () => {
   const schoolCode = qs("schoolCode").value;
   const officeCode = qs("officeCode").value;
@@ -51,44 +52,43 @@ qs("loadTodayBtn").addEventListener("click", async () => {
     const data = await r.json();
     const ul = qs("dailyTimetable");
     ul.innerHTML = "";
-    if (!data.length) return ul.textContent = "시간표 없음";
-    data.forEach(item => {
+    if (!data.length) ul.textContent = "시간표 없음";
+    else data.forEach(item => {
       const li = document.createElement("li");
       li.textContent = `${item.period}교시: ${item.subject} (${item.teacher})`;
       ul.appendChild(li);
     });
-  } catch (err) {
-    console.error(err);
-  }
+  } catch (err) { console.error(err); }
 
   // 오늘 급식
   try {
     const r = await fetch(`/api/dailyMeal?schoolCode=${schoolCode}&officeCode=${officeCode}`);
     const data = await r.json();
-    qs("dailyMeal").textContent = data.menu || "급식 없음";
-  } catch (err) {
-    console.error(err);
-  }
+    qs("dailyMeal").textContent = data.menu ? data.menu.replace(/<br\s*\/?>/g, ", ") : "급식 없음";
+  } catch (err) { console.error(err); }
 });
 
 // 주간 시간표
 qs("loadWeeklyBtn").addEventListener("click", async () => {
   const schoolCode = qs("schoolCode").value;
   const officeCode = qs("officeCode").value;
-  const grade = qs("weekGrade").value;
-  const classNo = qs("weekClassNo").value;
-  const startDate = qs("weekStartDate").value.replace(/-/g,"");
-  if (!startDate) return alert("시작일 선택");
+  const grade = qs("grade").value;
+  const classNo = qs("classNo").value;
+  if (!schoolCode || !officeCode) return alert("학교를 먼저 선택하세요.");
+
+  const today = new Date();
+  const day = today.getDay();
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - day + 1);
+  const startDate = monday.toISOString().slice(0,10).replace(/-/g,"");
 
   try {
     const r = await fetch(`/api/weeklyTimetable?schoolCode=${schoolCode}&officeCode=${officeCode}&grade=${grade}&classNo=${classNo}&startDate=${startDate}`);
     const data = await r.json();
     const grid = qs("weeklyGrid");
     grid.innerHTML = "";
-
     if (!data.length) return grid.textContent = "주간 시간표 없음";
 
-    // 요일별 묶기
     const grouped = {};
     data.forEach(item => {
       if (!grouped[item.date]) grouped[item.date] = [];
@@ -106,20 +106,19 @@ qs("loadWeeklyBtn").addEventListener("click", async () => {
       });
       grid.appendChild(div);
     });
-  } catch (err) {
-    console.error(err);
-  }
+  } catch (err) { console.error(err); }
 });
 
-// 월간 급식
-qs("loadMonthlyMealBtn").addEventListener("click", async () => {
+// 월간 급식 자동 로드
+async function loadMonthlyMeal() {
   const schoolCode = qs("schoolCode").value;
   const officeCode = qs("officeCode").value;
-  const base = qs("mealMonthDate").value;
-  if (!base) return alert("기준일 선택");
+  if (!schoolCode || !officeCode) return;
 
-  const start = base.slice(0,7).replace("-","")+"01";
-  const end = base.slice(0,7).replace("-","")+"31";
+  const today = new Date();
+  const yearMonth = today.toISOString().slice(0,7).replace("-","");
+  const start = yearMonth + "01";
+  const end = yearMonth + "31";
 
   try {
     const r = await fetch(`/api/monthlyMeal?schoolCode=${schoolCode}&officeCode=${officeCode}&startDate=${start}&endDate=${end}`);
@@ -127,32 +126,25 @@ qs("loadMonthlyMealBtn").addEventListener("click", async () => {
     const grid = qs("monthlyMealGrid");
     grid.innerHTML = "";
 
-    // 날짜별 매핑
     const meals = {};
-    data.forEach(item => meals[item.date] = item.menu);
+    data.forEach(item => meals[item.date] = item.menu ? item.menu.replace(/<br\s*\/?>/g,", ") : "");
 
-    const firstDay = new Date(base.slice(0,7)+"-01");
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
     const startWeekday = firstDay.getDay();
-    const lastDate = new Date(firstDay.getFullYear(), firstDay.getMonth()+1, 0).getDate();
+    const lastDate = new Date(today.getFullYear(), today.getMonth()+1, 0).getDate();
 
-    // 빈칸
-    for (let i=0; i<startWeekday; i++) {
-      grid.appendChild(document.createElement("div"));
-    }
-
-    for (let d=1; d<=lastDate; d++) {
-      const dateStr = base.slice(0,7).replace("-","") + String(d).padStart(2,"0");
+    for(let i=0; i<startWeekday; i++) grid.appendChild(document.createElement("div"));
+    for(let d=1; d<=lastDate; d++){
+      const dateStr = yearMonth + String(d).padStart(2,"0");
       const cell = document.createElement("div");
       cell.className = "day-cell";
-      cell.innerHTML = `<strong>${d}</strong><div>${meals[dateStr] ? meals[dateStr].replace(/<br\/?>/g,", ") : ""}</div>`;
+      cell.innerHTML = `<strong>${d}</strong><div>${meals[dateStr] || ""}</div>`;
       grid.appendChild(cell);
     }
-  } catch (err) {
-    console.error(err);
-  }
-});
+  } catch (err) { console.error(err); }
+}
 
-// 즐겨찾기 저장/불러오기
+// 즐겨찾기
 qs("saveFavorite").addEventListener("click", () => {
   localStorage.setItem("favorite", JSON.stringify({
     schoolCode: qs("schoolCode").value,
@@ -169,5 +161,6 @@ qs("loadFavorite").addEventListener("click", () => {
   qs("officeCode").value = fav.officeCode;
   qs("grade").value = fav.grade;
   qs("classNo").value = fav.classNo;
+  loadMonthlyMeal();
   alert("불러오기 완료");
 });
