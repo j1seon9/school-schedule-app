@@ -16,7 +16,7 @@ app.use(express.static(path.join(__dirname, "public")));
 
 const API_KEY = process.env.API_KEY;
 
-// 루트 라우트 (probe용)
+// 루트 라우트 (health check)
 app.get("/", (req, res) => res.send("School Schedule App running"));
 
 function formatDate(date) {
@@ -28,7 +28,7 @@ app.get("/api/searchSchool", async (req, res) => {
   const { name } = req.query;
   if (!name) return res.json([]);
   try {
-    const url = `https://open.neis.go.kr/hub/schoolInfo?KEY=${API_KEY}&Type=json&pIndex=1&pSize=10&SCHUL_NM=${encodeURIComponent(name)}`;
+    const url = `https://open.neis.go.kr/hub/schoolInfo?KEY=${API_KEY}&Type=json&pIndex=1&pSize=20&SCHUL_NM=${encodeURIComponent(name)}`;
     const r = await fetch(url);
     const data = await r.json();
     const schools = data.schoolInfo?.[1]?.row?.map(s => ({
@@ -61,7 +61,7 @@ app.get("/api/dailyMeal", async (req, res) => {
   }
 });
 
-// --- 주간/월간도 동일하게 NEIS API 호출 구조 ---
+// --- 주간 시간표 (급식) ---
 app.get("/api/weeklyTimetable", async (req, res) => {
   const { schoolCode, officeCode, startDate } = req.query;
   if (!schoolCode || !officeCode) return res.json([]);
