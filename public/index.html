@@ -1,44 +1,55 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>학교 시간표 & 급식 조회</title>
-<link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>학교 시간표 & 급식 조회</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<div class="container">
-  <h1>학교 시간표 & 급식 조회</h1>
+  <div class="container">
+    <h1>학교 시간표 & 급식 조회</h1>
 
-  <!-- 학교 검색 -->
-  <div class="search-section">
-    <input type="text" id="schoolName" placeholder="학교명 입력">
-    <button id="searchSchoolBtn">검색</button>
-    <span id="selectedSchool">선택된 학교 없음</span>
-  </div>
+    <!-- 학교 검색 -->
+    <div class="card">
+      <h2>학교 검색</h2>
+      <input id="schoolInput" placeholder="학교 이름 입력" />
+      <button onclick="searchSchool()">검색</button>
+    </div>
 
-  <!-- 학교 선택 모달 -->
-  <div id="schoolModal" class="modal" aria-hidden="true">
-    <div class="modal-content">
-      <h3>학교 선택</h3>
-      <ul id="schoolList"></ul>
-      <button id="closeModalBtn">닫기</button>
+    <!-- 일간 조회 -->
+    <div class="card">
+      <h2>일간 조회</h2>
+      <input type="date" id="dailyDate" />
+      <button onclick="fetchDaily()">조회</button>
+      <pre id="dailyResult"></pre>
+    </div>
+
+    <!-- 주간 조회 -->
+    <div class="card">
+      <h2>주간 조회</h2>
+      <input type="date" id="weeklyDate" />
+      <button onclick="fetchWeekly()">조회</button>
+      <div id="weeklyGrid"></div>
+    </div>
+
+    <!-- 월간 조회 -->
+    <div class="card">
+      <h2>월간 조회</h2>
+      <input type="month" id="monthlyDate" />
+      <button onclick="fetchMonthly()">조회</button>
+      <div id="monthlyCalendar" class="calendar"></div>
     </div>
   </div>
 
-  <!-- 일간 급식 -->
-  <div class="daily-section">
-    <h2>오늘 급식</h2>
-    <div id="dailyMeal">불러오는 중...</div>
+  <!-- 학교 검색 모달 -->
+  <div class="modal" id="schoolModal" aria-hidden="true">
+    <div class="modal-content">
+      <h3>학교 선택</h3>
+      <ul id="schoolList"></ul>
+    </div>
   </div>
 
-  <!-- 주간 급식 -->
-  <div class="weekly-section">
-    <h2>주간 급식</h2>
-    <div id="weeklyGrid" class="weekly-grid"></div>
-  </div>
-</div>
-
-<script src="script.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
