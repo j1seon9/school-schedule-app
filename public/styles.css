@@ -1,24 +1,43 @@
-body {
-  font-family: 'Noto Sans KR', sans-serif;
+/* 기본 설정 */
+* {
+  box-sizing: border-box;
   margin: 0;
   padding: 0;
-  background: #f2f2f2;
-  color: #333;
 }
 
+body {
+  font-family: 'Noto Sans KR', sans-serif;
+  background-color: #fff8f0; /* 부드러운 크림색 배경 */
+  color: #4b2e1e; /* 진한 브라운 글자 */
+  line-height: 1.5;
+}
+
+/* 컨테이너 */
 .container {
   max-width: 480px;
   margin: 0 auto;
   padding: 1rem;
-  background: #fff;
+  background-color: #fff5e6; /* 살짝 밝은 오렌지 느낌 */
   min-height: 100vh;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 
-h1, h2, h3 {
+/* 제목 */
+h1 {
   text-align: center;
-  margin-bottom: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 1.6rem;
+  color: #d46b08; /* 오렌지 주황 */
 }
 
+h2, h3 {
+  text-align: center;
+  margin: 0.5rem 0;
+  color: #a63e00; /* 진한 주황/브라운 */
+}
+
+/* 학교 검색 */
 .search-section {
   display: flex;
   flex-direction: column;
@@ -27,71 +46,122 @@ h1, h2, h3 {
 }
 
 .search-section input {
-  width: 80%;
-  padding: 0.5rem;
+  width: 90%;
+  padding: 0.6rem;
   margin-bottom: 0.5rem;
   font-size: 1rem;
+  border: 1px solid #e6994c;
+  border-radius: 6px;
 }
 
 .search-section button {
-  padding: 0.5rem 1rem;
+  width: 90%;
+  padding: 0.6rem;
   font-size: 1rem;
   cursor: pointer;
+  background: #ff8c42; /* 포인트 주황 */
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  transition: 0.3s;
+}
+
+.search-section button:hover {
+  background: #ff9c5e;
 }
 
 #selectedSchool {
-  display: block;
   margin-top: 0.5rem;
   font-weight: bold;
+  font-size: 0.95rem;
+  text-align: center;
+  color: #c2410c; /* 진한 오렌지 */
 }
 
-.daily-section, .weekly-section {
+/* 일간 급식 */
+.daily-section {
   margin-bottom: 1rem;
 }
 
 #dailyMeal {
   text-align: center;
-  font-size: 1.1rem;
-  padding: 0.5rem;
-  background: #e6f7ff;
-  border-radius: 5px;
+  padding: 0.8rem;
+  font-size: 1rem;
+  background-color: #fff3e6; /* 여우 털 느낌 밝은 배경 */
+  border: 1px solid #ffb366;
+  border-radius: 8px;
+  word-break: keep-all;
+}
+
+/* 주간 시간표 */
+.weekly-section {
+  margin-bottom: 1rem;
 }
 
 .weekly-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: 0.5rem;
 }
 
 .week-day {
-  background: #fff0f6;
-  border-radius: 5px;
+  background-color: #ffe6cc;
+  border: 1px solid #ffa64d;
+  border-radius: 8px;
   padding: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+  min-height: 80px;
 }
 
 .week-day h4 {
-  margin: 0;
-  font-size: 1rem;
+  font-size: 0.95rem;
   text-align: center;
+  margin-bottom: 0.3rem;
+  color: #cc5200;
 }
 
 .week-day p {
-  margin: 0.2rem 0;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
+  text-align: center;
+  word-break: keep-all;
+  color: #993d00;
+}
+
+/* 월간 급식 달력 */
+.monthlyMealGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+}
+
+.day-cell {
+  background-color: #fff5e6;
+  border: 1px solid #ffa64d;
+  border-radius: 4px;
+  padding: 0.4rem;
+  font-size: 0.85rem;
   text-align: center;
 }
 
-/* 모달 스타일 */
+.day-cell div {
+  margin-top: 0.3rem;
+  color: #d46b08;
+  font-weight: 500;
+  word-break: keep-all;
+}
+
+/* 모달 */
 .modal {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0,0,0,0.4);
   display: none;
   align-items: center;
   justify-content: center;
+  z-index: 1000;
 }
 
 .modal[aria-hidden="false"] {
@@ -99,32 +169,39 @@ h1, h2, h3 {
 }
 
 .modal-content {
-  background: #fff;
-  padding: 1rem;
+  background: #fff8f0;
   width: 90%;
   max-width: 400px;
-  border-radius: 5px;
+  padding: 1rem;
+  border-radius: 8px;
+  max-height: 80%;
+  overflow-y: auto;
+}
+
+.modal-content h3 {
+  text-align: center;
+  margin-bottom: 1rem;
+  color: #d46b08;
 }
 
 .modal-content ul {
   list-style: none;
-  padding: 0;
-  max-height: 300px;
-  overflow-y: auto;
 }
 
 .modal-content li {
   padding: 0.5rem;
-  border-bottom: 1px solid #ccc;
+  border-bottom: 1px solid #ffe6cc;
   cursor: pointer;
+  transition: 0.2s;
 }
 
 .modal-content li:hover {
-  background: #f0f0f0;
+  background-color: #ffedd6;
 }
 
-.modal-content button {
-  display: block;
-  margin: 0.5rem auto 0;
-  padding: 0.5rem 1rem;
+/* 반응형 */
+@media (max-width: 480px) {
+  .search-section input, .search-section button {
+    width: 95%;
+  }
 }
