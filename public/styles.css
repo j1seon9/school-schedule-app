@@ -1,88 +1,92 @@
-/* 기본 레이아웃 */
+/* 전체 레이아웃 */
 body {
-  font-family: "Noto Sans KR", Arial, sans-serif;
+  font-family: "Noto Sans KR", sans-serif;
+  background: #fff4e6;   /* 베이지톤 배경 */
   margin: 0;
   padding: 0;
-  background: #f8f9fa;
-  color: #333;
-  line-height: 1.6;
+  color: #3d2b1f;        /* 기본 텍스트는 부드러운 갈색 */
 }
 
 .container {
-  max-width: 1000px;
-  margin: auto;
+  max-width: 900px;
+  margin: 0 auto;
   padding: 20px;
 }
 
-/* 카드형 박스 */
-.card {
-  background: #fff;
-  padding: 20px;
-  margin: 20px 0;
+/* 헤더 */
+h1 {
+  text-align: center;
+  color: #e67e22;  /* 여우 주황 */
+  margin-bottom: 8px;
+}
+
+h3.notice-text {
+  text-align: center;
+  background: #fef9f6;
+  border: 2px dashed #e67e22;
   border-radius: 12px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-}
-
-h1, h2, h3 {
-  margin-bottom: 10px;
-  font-weight: 600;
-  color: #2c3e50;
-}
-
-/* 버튼 스타일 */
-button {
-  background: #4a90e2;
-  color: white;
-  border: none;
-  padding: 8px 14px;
-  margin: 5px 0;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: 0.3s;
+  padding: 8px 12px;
+  color: #a0522d;
   font-size: 14px;
+  display: inline-block;
+  margin: 0 auto 20px auto;
+}
+
+/* 카드 */
+.card {
+  background: #fef9f6; /* 연한 크림 배경 */
+  border: 1px solid #e6cbb3;
+  border-radius: 14px;
+  padding: 16px;
+  margin: 20px 0;
+  box-shadow: 0 3px 8px rgba(160, 82, 45, 0.2);
+}
+
+.card h2 {
+  margin-top: 0;
+  color: #e67e22;
+}
+
+/* 버튼 */
+button {
+  background: #e67e22;
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.3s ease;
 }
 
 button:hover {
-  background: #357abd;
+  background: #cf6d17; /* 조금 더 어두운 주황 */
 }
 
 /* 입력창 */
-input[type="text"], input[type="number"] {
-  padding: 6px 10px;
-  margin: 5px 0;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 14px;
+input[type="text"],
+input[type="number"] {
+  padding: 6px 8px;
+  margin: 4px;
+  border: 1px solid #e6cbb3;
+  border-radius: 8px;
+  outline: none;
 }
 
-/* 리스트 스타일 */
+input:focus {
+  border-color: #e67e22;
+  box-shadow: 0 0 4px rgba(230, 126, 34, 0.4);
+}
+
+/* 리스트 */
 ul {
   list-style: none;
   padding: 0;
 }
 ul li {
-  background: #f0f4f8;
-  margin: 4px 0;
-  padding: 8px;
-  border-radius: 6px;
-}
-
-/* 캘린더 (월간 급식표) */
-.calendar {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 8px;
-  margin-top: 10px;
-}
-
-.calendar div {
-  background: #fdfdfd;
-  padding: 10px;
-  min-height: 80px;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  font-size: 12px;
-  overflow-y: auto;
+  padding: 6px;
+  border-bottom: 1px solid #e6cbb3;
+  color: #3d2b1f;
 }
 
 /* 모달 */
@@ -92,36 +96,59 @@ ul li {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0,0,0,0.4);
-  display: none;
+  background: rgba(61, 43, 31, 0.6);
+  display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
 }
 
-.modal[aria-hidden="false"] {
-  display: flex;
+.modal[aria-hidden="true"] {
+  display: none;
 }
 
 .modal-content {
-  background: #fff;
+  background: #fff4e6;
   padding: 20px;
-  border-radius: 12px;
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(61, 43, 31, 0.3);
+  max-width: 400px;
   width: 90%;
-  max-width: 500px;
-  box-shadow: 0 6px 15px rgba(0,0,0,0.2);
 }
 
-/* 반응형 */
-@media (max-width: 768px) {
-  .calendar {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .card {
-    padding: 15px;
-  }
-  button {
-    font-size: 13px;
-    padding: 6px 12px;
-  }
+/* 주간 시간표 */
+.week-day {
+  background: #fef9f6;
+  border: 1px solid #e6cbb3;
+  border-radius: 10px;
+  padding: 8px;
+  margin: 8px;
+  box-shadow: 0 2px 6px rgba(160, 82, 45, 0.1);
+}
+
+.week-day h4 {
+  margin: 0 0 6px 0;
+  color: #e67e22;
+}
+
+/* 월간 급식 달력 */
+.calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.day-cell {
+  background: #fff;
+  border: 1px solid #e6cbb3;
+  border-radius: 8px;
+  padding: 6px;
+  font-size: 13px;
+  min-height: 80px;
+  color: #3d2b1f;
+}
+
+.day-cell strong {
+  display: block;
+  color: #e67e22;
+  margin-bottom: 4px;
 }
