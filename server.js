@@ -1,11 +1,11 @@
-require("dotenv").config();
+import dotenv from "dotenv";
+dotenv.config();
 const express = require("express");
 const fetch = require("node-fetch");
 const path = require("path");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
 const API_KEY = process.env.API_KEY;
 
 // 정적 파일 서빙
@@ -152,7 +152,7 @@ app.get("/api/monthlyMeal", async (req, res) => {
 });
 
 // 서버 실행
-app.listen(PORT, () => {
-  console.log(`✅ Server running at http://localhost:${PORT}`);
+app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
 });
+
 
