@@ -37,53 +37,66 @@ qs("searchSchoolBtn").addEventListener("click", async () => {
   }
 });
 
-// 오늘 일정 (시간표 + 급식)
-qs("loadTodayBtn").addEventListener("click", async () => {
+// 일간 시간표
+async function loadDailyTimetable() {
   const schoolCode = qs("schoolCode").value;
   const officeCode = qs("officeCode").value;
   const grade = qs("grade").value;
   const classNo = qs("classNo").value;
   if (!schoolCode || !officeCode) return alert("학교를 먼저 선택하세요.");
 
-  // 오늘 시간표
   try {
     const r = await fetch(`/api/dailyTimetable?schoolCode=${schoolCode}&officeCode=${officeCode}&grade=${grade}&classNo=${classNo}`);
     const data = await r.json();
     const ul = qs("dailyTimetable");
     ul.innerHTML = "";
-    if (!data.length) return ul.textContent = "오늘 시간표 없음";
+    if (!data.length) return ul.textContent = "시간표 없음";
     data.forEach(item => {
       const li = document.createElement("li");
-      li.innerHTML = `<strong>${item.period}교시</strong><br/>${item.subject}<br/><span class="teacher">${item.teacher}</span>`;
+      li.textContent = `${item.period}교시: ${item.subject} (${item.teacher})`;
       ul.appendChild(li);
     });
   } catch (err) {
     console.error(err);
   }
+}
 
-  // 오늘 급식
+// 일간 급식
+async function loadDailyMeal() {
+  const schoolCode = qs("schoolCode").value;
+  const officeCode = qs("officeCode").value;
+  if (!schoolCode || !officeCode) return alert("학교를 먼저 선택하세요.");
+
   try {
     const r = await fetch(`/api/dailyMeal?schoolCode=${schoolCode}&officeCode=${officeCode}`);
     const data = await r.json();
-    qs("dailyMeal").textContent = data.menu || "오늘 급식 없음";
+    qs("dailyMeal").textContent = data.menu || "급식 없음";
   } catch (err) {
     console.error(err);
   }
+}
+
+// 일간 조회 버튼
+qs("loadTodayBtn").addEventListener("click", () => {
+  loadDailyTimetable();
+  loadDailyMeal();
 });
 
 // 주간 시간표
 qs("loadWeeklyBtn").addEventListener("click", async () => {
   const schoolCode = qs("schoolCode").value;
   const officeCode = qs("officeCode").value;
-  const grade = qs("grade").value;
-  const classNo = qs("classNo").value;
-  if (!schoolCode || !officeCode) return alert("학교 선택 필요");
+  const grade = qs("weekGrade").value;
+  const classNo = qs("weekClassNo").value;
+  if (!schoolCode || !officeCode) return alert("학교를 먼저 선택하세요.");
+  if (!grade || !classNo) return alert("학년/반 입력 필요");
 
-  // 이번 주 월요일 기준 계산
+  // 조회일 기준 주의 월요일 계산
   const today = new Date();
   const day = today.getDay();
+  const diff = day === 0 ? -6 : 1 - day; // 일요일이면 -6
   const monday = new Date(today);
-  monday.setDate(today.getDate() - day + 1); // 월요일
+  monday.setDate(today.getDate() + diff);
   const startDate = monday.toISOString().slice(0,10).replace(/-/g,"");
 
   try {
@@ -91,23 +104,24 @@ qs("loadWeeklyBtn").addEventListener("click", async () => {
     const data = await r.json();
     const grid = qs("weeklyGrid");
     grid.innerHTML = "";
-    if (!data.length) return grid.textContent = "이번 주 시간표 없음";
 
+    if (!data.length) return grid.textContent = "주간 시간표 없음";
+
+    // 요일별 묶기
     const grouped = {};
     data.forEach(item => {
       if (!grouped[item.date]) grouped[item.date] = [];
       grouped[item.date].push(item);
     });
 
-    Object.keys(grouped).forEach(date => {
+    Object.keys(grouped).sort().forEach(date => {
+      const dayName = ['일','월','화','수','목','금','토'][new Date(date.slice(0,4)+'-'+date.slice(4,6)+'-'+date.slice(6,8)).getDay()];
       const div = document.createElement("div");
       div.className = "week-day";
-      const d = new Date(date.slice(0,4)+"-"+date.slice(4,6)+"-"+date.slice(6,8));
-      const weekdays = ["일","월","화","수","목","금","토"];
-      div.innerHTML = `<h4>${d.getMonth()+1}/${d.getDate()} (${weekdays[d.getDay()]})</h4>`;
+      div.innerHTML = `<h4>${dayName}요일</h4>`;
       grouped[date].forEach(item => {
         const p = document.createElement("p");
-        p.innerHTML = `<strong>${item.period}교시</strong> ${item.subject}<br/><span class="teacher">${item.teacher}</span>`;
+        p.textContent = `${item.period}교시: ${item.subject} (${item.teacher})`;
         div.appendChild(p);
       });
       grid.appendChild(div);
@@ -121,12 +135,13 @@ qs("loadWeeklyBtn").addEventListener("click", async () => {
 qs("loadMonthlyMealBtn").addEventListener("click", async () => {
   const schoolCode = qs("schoolCode").value;
   const officeCode = qs("officeCode").value;
-  if (!schoolCode || !officeCode) return alert("학교 선택 필요");
+  if (!schoolCode || !officeCode) return alert("학교를 먼저 선택하세요.");
 
-  const today = new Date();
-  const base = today.toISOString().slice(0,10);
-  const start = base.slice(0,7).replace("-","")+"01";
-  const end = base.slice(0,7).replace("-","")+"31";
+  const base = new Date(); // 오늘 기준
+  const year = base.getFullYear();
+  const month = String(base.getMonth()+1).padStart(2,'0');
+  const start = `${year}${month}01`;
+  const end = `${year}${month}31`;
 
   try {
     const r = await fetch(`/api/monthlyMeal?schoolCode=${schoolCode}&officeCode=${officeCode}&startDate=${start}&endDate=${end}`);
@@ -137,17 +152,16 @@ qs("loadMonthlyMealBtn").addEventListener("click", async () => {
     const meals = {};
     data.forEach(item => meals[item.date] = item.menu);
 
-    const firstDay = new Date(base.slice(0,7)+"-01");
+    const firstDay = new Date(`${year}-${month}-01`);
     const startWeekday = firstDay.getDay();
-    const lastDate = new Date(firstDay.getFullYear(), firstDay.getMonth()+1,0).getDate();
+    const lastDate = new Date(year, base.getMonth()+1, 0).getDate();
 
-    for (let i=0;i<startWeekday;i++){
-      const empty = document.createElement("div");
-      grid.appendChild(empty);
+    for (let i=0; i<startWeekday; i++) {
+      grid.appendChild(document.createElement("div"));
     }
 
-    for (let d=1; d<=lastDate; d++){
-      const dateStr = base.slice(0,7).replace("-","")+String(d).padStart(2,"0");
+    for (let d=1; d<=lastDate; d++) {
+      const dateStr = `${year}${month}` + String(d).padStart(2,"0");
       const cell = document.createElement("div");
       cell.className = "day-cell";
       cell.innerHTML = `<strong>${d}</strong><div>${meals[dateStr] ? meals[dateStr].replace(/<br\/?>/g,", ") : ""}</div>`;
@@ -156,4 +170,25 @@ qs("loadMonthlyMealBtn").addEventListener("click", async () => {
   } catch (err) {
     console.error(err);
   }
+});
+
+// 즐겨찾기 저장/불러오기
+qs("saveFavorite").addEventListener("click", () => {
+  localStorage.setItem("favorite", JSON.stringify({
+    schoolCode: qs("schoolCode").value,
+    officeCode: qs("officeCode").value,
+    grade: qs("grade").value,
+    classNo: qs("classNo").value
+  }));
+  alert("저장 완료");
+});
+
+qs("loadFavorite").addEventListener("click", () => {
+  const fav = JSON.parse(localStorage.getItem("favorite")||"{}");
+  if (!fav.schoolCode) return alert("저장된 즐겨찾기 없음");
+  qs("schoolCode").value = fav.schoolCode;
+  qs("officeCode").value = fav.officeCode;
+  qs("grade").value = fav.grade;
+  qs("classNo").value = fav.classNo;
+  alert("불러오기 완료");
 });
