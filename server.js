@@ -1,9 +1,13 @@
 import dotenv from "dotenv";
 dotenv.config();
-const express = require("express");
-const fetch = require("node-fetch");
-const path = require("path");
+import express = require("express");
+import fetch = require("node-fetch");
+import path from "path";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 const API_KEY = process.env.API_KEY;
@@ -153,6 +157,4 @@ app.get("/api/monthlyMeal", async (req, res) => {
 
 // 서버 실행
 app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
-});
-
 
