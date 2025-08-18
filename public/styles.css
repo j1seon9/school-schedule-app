@@ -16,22 +16,23 @@ body {
   max-width: 960px;
   margin: 24px auto;
   padding: 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
 }
 h1 {
+  grid-column: 1 / -1;
   text-align: center;
   color: var(--main-color);
   margin-bottom: 12px;
-}
-h2 {
-  margin: 12px 0;
-  color: var(--main-color);
 }
 .card {
   background: var(--card-bg);
   border-radius: 12px;
   padding: 14px;
-  margin-bottom: 16px;
   box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+  display: flex;
+  flex-direction: column;
 }
 input, button, select {
   padding: 10px;
@@ -55,21 +56,7 @@ pre {
   white-space: pre-wrap;
 }
 
-/* 🔶 일간 조회 */
-#dailyTimetable, #dailyMeal {
-  margin-top: 8px;
-  padding: 10px;
-  border-radius: 8px;
-  background: #fff;
-  border: 1px solid #f1d5c9;
-}
-#dailyMeal {
-  margin-top: 12px;
-  color: var(--muted);
-  font-size: 0.95em;
-}
-
-/* 🔶 주간 시간표 grid */
+/* 주간 시간표 grid */
 #weeklyGrid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -84,11 +71,10 @@ pre {
 .week-day h4 {
   text-align: center;
   margin: 0 0 6px;
-  color: var(--main-color);
 }
 
-/* 🔶 월간 급식 grid */
-#monthlyMealGrid.calendar {
+/* 월간 급식 grid */
+.calendar {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 6px;
@@ -136,6 +122,9 @@ pre {
 
 /* responsive */
 @media (max-width: 640px) {
+  .container {
+    grid-template-columns: 1fr;
+  }
   #weeklyGrid { grid-template-columns: 1fr; }
-  #monthlyMealGrid.calendar { grid-template-columns: repeat(7, minmax(40px, 1fr)); }
+  .calendar { grid-template-columns: repeat(7, minmax(40px, 1fr)); }
 }
