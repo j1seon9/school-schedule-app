@@ -1,13 +1,16 @@
+// ========================== server.js ==========================
 import dotenv from "dotenv";
 dotenv.config();
-import express = require("express");
-import fetch = require("node-fetch");
+
+import express from "express";
+import fetch from "node-fetch";
 import path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 const API_KEY = process.env.API_KEY;
@@ -15,9 +18,17 @@ const API_KEY = process.env.API_KEY;
 // 정적 파일 서빙
 app.use(express.static(path.join(__dirname, "public")));
 
+// ===== KST 기준 날짜 함수 =====
+function getTodayKST() {
+  const now = new Date();
+  const kstOffset = 9 * 60; // +9시간
+  const kstDate = new Date(now.getTime() + kstOffset * 60 * 1000);
+  return kstDate.toISOString().slice(0, 10).replace(/-/g, "");
+}
+
 // ===== 헬스체크 =====
 app.get("/health", (req, res) => {
-  res.json({ status: "ok", timestamp: new Date() });
+  res.json({ status: "ok", timestamp: new Date().toLocaleString("ko-KR", { timeZone: "Asia/Seoul" }) });
 });
 
 // ===== 학교 검색 =====
@@ -26,21 +37,19 @@ app.get("/api/searchSchool", async (req, res) => {
   if (!name) return res.status(400).json({ error: "학교명을 입력하세요." });
 
   try {
-    const url = `https://open.neis.go.kr/hub/schoolInfo?KEY=${API_KEY}&Type=json&SCHUL_NM=${encodeURIComponent(
-      name
-    )}`;
+    const url = `https://open.neis.go.kr/hub/schoolInfo?KEY=${API_KEY}&Type=json&SCHUL_NM=${encodeURIComponent(name)}`;
     const r = await fetch(url);
     const j = await r.json();
 
-    if (!j.schoolInfo) return res.json([]);
-    const rows = j.schoolInfo[1].row;
+    const rows = j?.schoolInfo?.[1]?.row;
+    if (!rows) return res.json([]);
 
     const result = rows.map((s) => ({
       name: s.SCHUL_NM,
       schoolCode: s.SD_SCHUL_CODE,
       officeCode: s.ATPT_OFCDC_SC_CODE,
-      type: s.SCHUL_KND_SC_NM, // 초/중/고/특성화/특수
-      gender: s.COEDU_SC_NM, // 남/여/남여공학
+      type: s.SCHUL_KND_SC_NM,
+      gender: s.COEDU_SC_NM,
     }));
     res.json(result);
   } catch (err) {
@@ -55,16 +64,15 @@ app.get("/api/dailyTimetable", async (req, res) => {
   if (!schoolCode || !officeCode || !grade || !classNo)
     return res.status(400).json({ error: "파라미터 누락" });
 
-  const today = new Date();
-  const date = today.toISOString().slice(0, 10).replace(/-/g, "");
+  const date = getTodayKST();
 
   try {
     const url = `https://open.neis.go.kr/hub/hisTimetable?KEY=${API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${officeCode}&SD_SCHUL_CODE=${schoolCode}&ALL_TI_YMD=${date}&GRADE=${grade}&CLASS_NM=${classNo}`;
     const r = await fetch(url);
     const j = await r.json();
 
-    if (!j.hisTimetable) return res.json([]);
-    const rows = j.hisTimetable[1].row;
+    const rows = j?.hisTimetable?.[1]?.row;
+    if (!rows) return res.json([]);
 
     const result = rows.map((r) => ({
       date: r.ALL_TI_YMD,
@@ -90,8 +98,8 @@ app.get("/api/weeklyTimetable", async (req, res) => {
     const r = await fetch(url);
     const j = await r.json();
 
-    if (!j.hisTimetable) return res.json([]);
-    const rows = j.hisTimetable[1].row;
+    const rows = j?.hisTimetable?.[1]?.row;
+    if (!rows) return res.json([]);
 
     const result = rows.map((r) => ({
       date: r.ALL_TI_YMD,
@@ -112,15 +120,15 @@ app.get("/api/dailyMeal", async (req, res) => {
   if (!schoolCode || !officeCode)
     return res.status(400).json({ error: "파라미터 누락" });
 
-  const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+  const today = getTodayKST();
 
   try {
     const url = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${officeCode}&SD_SCHUL_CODE=${schoolCode}&MLSV_YMD=${today}`;
     const r = await fetch(url);
     const j = await r.json();
 
-    if (!j.mealServiceDietInfo) return res.json({ menu: null });
-    const rows = j.mealServiceDietInfo[1].row;
+    const rows = j?.mealServiceDietInfo?.[1]?.row;
+    if (!rows) return res.json({ menu: null });
 
     const menu = rows.map((m) => m.DDISH_NM).join("\n");
     res.json({ menu });
@@ -141,8 +149,8 @@ app.get("/api/monthlyMeal", async (req, res) => {
     const r = await fetch(url);
     const j = await r.json();
 
-    if (!j.mealServiceDietInfo) return res.json([]);
-    const rows = j.mealServiceDietInfo[1].row;
+    const rows = j?.mealServiceDietInfo?.[1]?.row;
+    if (!rows) return res.json([]);
 
     const result = rows.map((r) => ({
       date: r.MLSV_YMD,
@@ -157,4 +165,3 @@ app.get("/api/monthlyMeal", async (req, res) => {
 
 // 서버 실행
 app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
-
