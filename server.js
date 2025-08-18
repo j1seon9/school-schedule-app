@@ -5,6 +5,7 @@ const path = require("path");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
 const API_KEY = process.env.API_KEY;
 
 // 정적 파일 서빙
@@ -154,3 +155,4 @@ app.get("/api/monthlyMeal", async (req, res) => {
 app.listen(PORT, () => {
   console.log(`✅ Server running at http://localhost:${PORT}`);
 });
+
