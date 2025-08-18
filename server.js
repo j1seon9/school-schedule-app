@@ -3,9 +3,9 @@ import cors from "cors";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
-import fetch from "node-fetch";
 
 dotenv.config();
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -16,8 +16,11 @@ app.use(express.static(path.join(__dirname, "public")));
 
 const API_KEY = process.env.API_KEY;
 
+// 루트 라우트 (probe용)
+app.get("/", (req, res) => res.send("School Schedule App running"));
+
 function formatDate(date) {
-  return date.toISOString().slice(0,10).replace(/-/g,"");
+  return date.toISOString().slice(0, 10).replace(/-/g, "");
 }
 
 // --- 학교 검색 ---
@@ -42,58 +45,10 @@ app.get("/api/searchSchool", async (req, res) => {
   }
 });
 
-// --- 일간 시간표 (모든 학교급) ---
-app.get("/api/dailyTimetable", async (req, res) => {
-  const { schoolCode, officeCode, grade, classNo, date } = req.query;
-  if (!schoolCode || !officeCode || !grade || !classNo) return res.json([]);
-
-  try {
-    const url = `https://open.neis.go.kr/hub/elsTimetable?KEY=${API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${officeCode}&SD_SCHUL_CODE=${schoolCode}&GRADE=${grade}&CLASS_NM=${classNo}&ALL_TI_YMD=${date}`;
-    const r = await fetch(url);
-    const data = await r.json();
-    const timetable = data.elsTimetable?.[1]?.row?.map(item => ({
-      period: item.ITRT_CNTNT || "1",
-      subject: item.ITRT_CNTNT || "수업",
-      teacher: item.DC_TCH_NM || ""
-    })) || [];
-    res.json(timetable);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "일간 시간표 조회 실패" });
-  }
-});
-
-// --- 주간 시간표 ---
-app.get("/api/weeklyTimetable", async (req, res) => {
-  const { schoolCode, officeCode, grade, classNo, startDate } = req.query;
-  if (!schoolCode || !officeCode || !grade || !classNo) return res.json([]);
-
-  try {
-    const endDate = new Date(Number(startDate.slice(0,4)), Number(startDate.slice(4,6))-1, Number(startDate.slice(6,8)));
-    endDate.setDate(endDate.getDate()+6);
-    const endStr = formatDate(endDate);
-
-    const url = `https://open.neis.go.kr/hub/elsTimetable?KEY=${API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${officeCode}&SD_SCHUL_CODE=${schoolCode}&GRADE=${grade}&CLASS_NM=${classNo}&ALL_TI_YMD=${startDate}&ALL_TI_TO_YMD=${endStr}`;
-    const r = await fetch(url);
-    const data = await r.json();
-    const weekly = data.elsTimetable?.[1]?.row?.map(item => ({
-      date: item.ALL_TI_YMD,
-      period: item.ITRT_CNTNT || "1",
-      subject: item.ITRT_CNTNT || "수업",
-      teacher: item.DC_TCH_NM || ""
-    })) || [];
-    res.json(weekly);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "주간 시간표 조회 실패" });
-  }
-});
-
 // --- 일간 급식 ---
 app.get("/api/dailyMeal", async (req, res) => {
   const { schoolCode, officeCode, date } = req.query;
   if (!schoolCode || !officeCode) return res.json({ menu: "급식 없음" });
-
   try {
     const url = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${officeCode}&SD_SCHUL_CODE=${schoolCode}&MLSV_FROM_YMD=${date}&MLSV_TO_YMD=${date}`;
     const r = await fetch(url);
@@ -103,6 +58,33 @@ app.get("/api/dailyMeal", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ menu: "급식 조회 실패" });
+  }
+});
+
+// --- 주간/월간도 동일하게 NEIS API 호출 구조 ---
+app.get("/api/weeklyTimetable", async (req, res) => {
+  const { schoolCode, officeCode, startDate } = req.query;
+  if (!schoolCode || !officeCode) return res.json([]);
+  try {
+    const endDate = new Date(
+      parseInt(startDate.slice(0, 4)),
+      parseInt(startDate.slice(4, 6)) - 1,
+      parseInt(startDate.slice(6, 8))
+    );
+    endDate.setDate(endDate.getDate() + 6);
+    const endStr = formatDate(endDate);
+
+    const url = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${officeCode}&SD_SCHUL_CODE=${schoolCode}&MLSV_FROM_YMD=${startDate}&MLSV_TO_YMD=${endStr}`;
+    const r = await fetch(url);
+    const data = await r.json();
+    const weekly = data.mealServiceDietInfo?.[1]?.row?.map(item => ({
+      date: item.MLSV_YMD,
+      menu: item.DDISH_NM
+    })) || [];
+    res.json(weekly);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "주간 시간표 조회 실패" });
   }
 });
 
@@ -125,5 +107,6 @@ app.get("/api/monthlyMeal", async (req, res) => {
   }
 });
 
+// --- 서버 시작 ---
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
