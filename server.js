@@ -17,7 +17,7 @@ const API_KEY = process.env.API_KEY;
 // 정적 파일 서빙
 app.use(express.static(path.join(__dirname, "public")));
 
-// ===== KST 기준 날짜 함수 =====
+// ===== KST 기준 오늘 날짜 함수 =====
 function getTodayKST() {
   const now = new Date();
   const kstTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
@@ -35,7 +35,9 @@ app.get("/api/searchSchool", async (req, res) => {
   if (!name) return res.status(400).json({ error: "학교명을 입력하세요." });
 
   try {
-    const url = `https://open.neis.go.kr/hub/schoolInfo?KEY=${API_KEY}&Type=json&SCHUL_NM=${encodeURIComponent(name)}`;
+    const url = `https://open.neis.go.kr/hub/schoolInfo?KEY=${API_KEY}&Type=json&SCHUL_NM=${encodeURIComponent(
+      name
+    )}`;
     const r = await fetch(url);
     const j = await r.json();
 
@@ -46,8 +48,8 @@ app.get("/api/searchSchool", async (req, res) => {
       name: s.SCHUL_NM,
       schoolCode: s.SD_SCHUL_CODE,
       officeCode: s.ATPT_OFCDC_SC_CODE,
-      type: s.SCHUL_KND_SC_NM, // 초/중/고/특성화/특수
-      gender: s.COEDU_SC_NM, // 남/여/남여공학
+      type: s.SCHUL_KND_SC_NM,
+      gender: s.COEDU_SC_NM,
     }));
     res.json(result);
   } catch (err) {
@@ -62,7 +64,7 @@ app.get("/api/dailyTimetable", async (req, res) => {
   if (!schoolCode || !officeCode || !grade || !classNo)
     return res.status(400).json({ error: "파라미터 누락" });
 
-  const date = getTodayKST(); // KST 기준 날짜
+  const date = getTodayKST();
 
   try {
     const url = `https://open.neis.go.kr/hub/hisTimetable?KEY=${API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${officeCode}&SD_SCHUL_CODE=${schoolCode}&ALL_TI_YMD=${date}&GRADE=${grade}&CLASS_NM=${classNo}`;
@@ -118,7 +120,7 @@ app.get("/api/dailyMeal", async (req, res) => {
   if (!schoolCode || !officeCode)
     return res.status(400).json({ error: "파라미터 누락" });
 
-  const today = getTodayKST(); // KST 기준 날짜
+  const today = getTodayKST();
 
   try {
     const url = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${officeCode}&SD_SCHUL_CODE=${schoolCode}&MLSV_YMD=${today}`;
@@ -162,4 +164,6 @@ app.get("/api/monthlyMeal", async (req, res) => {
 });
 
 // 서버 실행
-app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`✅ Server running at http://localhost:${PORT}`);
+});
