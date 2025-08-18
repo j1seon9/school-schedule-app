@@ -37,7 +37,7 @@ qs("searchSchoolBtn").addEventListener("click", async () => {
   }
 });
 
-// 오늘 날짜 계산
+// 오늘 날짜
 function getToday() {
   const today = new Date();
   return today.toISOString().slice(0,10).replace(/-/g,"");
@@ -53,16 +53,17 @@ async function loadDailyTimetable() {
 
   try {
     const date = getToday();
-    const r = await fetch(`/api/dailyTimetable?schoolCode=${schoolCode}&officeCode=${officeCode}&grade=${grade}&classNo=${classNo}`);
+    const r = await fetch(`/api/dailyTimetable?schoolCode=${schoolCode}&officeCode=${officeCode}&grade=${grade}&classNo=${classNo}&date=${date}`);
     const data = await r.json();
     const ul = qs("dailyTimetable");
     ul.innerHTML = "";
     if (!data.length) return ul.textContent = "오늘 시간표 없음";
-    
-    data.filter(item => item.date === date).forEach(item => {
-      const li = document.createElement("li");
-      li.textContent = `${item.period}교시: ${item.subject} (${item.teacher})`;
-      ul.appendChild(li);
+    data.forEach(item => {
+      if (item.date === date) {
+        const li = document.createElement("li");
+        li.textContent = `${item.period}교시: ${item.subject} (${item.teacher})`;
+        ul.appendChild(li);
+      }
     });
   } catch (err) {
     console.error(err);
@@ -80,7 +81,7 @@ qs("loadWeeklyBtn").addEventListener("click", async () => {
 
   const today = new Date();
   const day = today.getDay();
-  const diff = day === 0 ? -6 : 1 - day; // 월요일 기준
+  const diff = day === 0 ? -6 : 1 - day;
   const monday = new Date(today);
   monday.setDate(today.getDate() + diff);
   const startDate = monday.toISOString().slice(0,10).replace(/-/g,"");
@@ -100,7 +101,7 @@ qs("loadWeeklyBtn").addEventListener("click", async () => {
     });
 
     Object.keys(grouped).sort().forEach(date => {
-      const dayName = ['일','월','화','수','목','금','토'][new Date(`${date.slice(0,4)}-${date.slice(4,6)}-${date.slice(6,8)}`).getDay()];
+      const dayName = ['일','월','화','수','목','금','토'][new Date(date.slice(0,4)+'-'+date.slice(4,6)+'-'+date.slice(6,8)).getDay()];
       const div = document.createElement("div");
       div.className = "week-day";
       div.innerHTML = `<h4>${dayName}요일</h4>`;
@@ -124,7 +125,7 @@ async function loadDailyMeal() {
 
   try {
     const date = getToday();
-    const r = await fetch(`/api/dailyMeal?schoolCode=${schoolCode}&officeCode=${officeCode}`);
+    const r = await fetch(`/api/dailyMeal?schoolCode=${schoolCode}&officeCode=${officeCode}&date=${date}`);
     const data = await r.json();
     qs("dailyMeal").textContent = data.menu || "급식 없음";
   } catch (err) {
@@ -160,7 +161,6 @@ qs("loadMonthlyMealBtn").addEventListener("click", async () => {
     // 빈칸 채우기
     for (let i=0; i<startWeekday; i++) {
       const empty = document.createElement("div");
-      empty.className = "day-cell empty";
       grid.appendChild(empty);
     }
 
