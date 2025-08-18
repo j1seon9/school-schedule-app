@@ -7,6 +7,80 @@
   <link rel="stylesheet" href="styles.css"/>
 </head>
 <body>
+  <div class="container">
+    <h1>📚 학교 시간표 & 🍴 급식표</h1>
+
+    <!-- 학교 검색 -->
+    <div class="card">
+      <h2>학교 검색</h2>
+      <input type="text" id="schoolName" placeholder="학교명 입력"/>
+      <button id="searchSchoolBtn">검색</button>
+      <input type="hidden" id="schoolCode"/>
+      <input type="hidden" id="officeCode"/>
+      <p id="selectedSchool"></p>
+      <div>
+        학년: <input type="number" id="grade" min="1" max="6"/>
+        반: <input type="number" id="classNo" min="1" max="20"/>
+      </div>
+    </div>
+
+    <!-- 일간 시간표 & 급식 -->
+    <div class="card">
+      <h2>오늘 일정</h2>
+      <button id="loadTodayBtn">조회</button>
+
+      <h3>🕒 일간 시간표</h3>
+      <ul id="dailyTimetable"></ul>
+
+      <h3>🍱 일간 급식</h3>
+      <pre id="dailyMeal"></pre>
+    </div>
+
+    <!-- 주간 시간표 -->
+    <div class="card">
+      <h2>주간 시간표</h2>
+      <div>
+        학년: <input type="number" id="weekGrade"/>
+        반: <input type="number" id="weekClassNo"/>
+        <button id="loadWeeklyBtn">조회</button>
+      </div>
+      <div id="weeklyGrid"></div>
+    </div>
+
+    <!-- 월간 급식 -->
+    <div class="card">
+      <h2>월간 급식표</h2>
+      <button id="loadMonthlyMealBtn">조회</button>
+      <div id="monthlyMealGrid" class="calendar"></div>
+    </div>
+
+    <!-- 즐겨찾기 -->
+    <div class="card">
+      <h2>즐겨찾기</h2>
+      <button id="saveFavorite">현재 학급 저장</button>
+      <button id="loadFavorite">즐겨찾기 불러오기</button>
+    </div>
+  </div>
+
+  <!-- 모달 -->
+  <div id="schoolModal" class="modal" aria-hidden="true">
+    <div class="modal-content">
+      <button id="closeModalBtn">닫기</button>
+      <ul id="schoolList"></ul>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html><!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>학교 시간표 & 급식표</title>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
 <div class="container">
   <h1>📚 학교 시간표 & 🍴 급식표</h1>
   <h3>일부 학교 시간표 표시 안됨</h3>
@@ -59,3 +133,4 @@
 <script src="script.js"></script>
 </body>
 </html>
+
