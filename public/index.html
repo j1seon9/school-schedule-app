@@ -9,31 +9,26 @@
 <body>
   <div class="container">
     <h1>📚 학교 시간표 & 🍴 급식표</h1>
-    <h3>일부학교 시간표 표시 안됨</h3>
+    <h3>일부 학교 시간표가 표시되지 않을 수 있습니다</h3>
 
-    <!-- 학교 검색 + 학년/반 -->
+    <!-- 학교 + 학년/반 검색 -->
     <div class="card">
-      <h2>학교 검색</h2>
+      <h2>학교 선택</h2>
       <input type="text" id="schoolName" placeholder="학교명 입력"/>
       <button id="searchSchoolBtn">검색</button>
-      학년: <input type="number" id="grade" min="1" max="6"/>
-      반: <input type="number" id="classNo" min="1" max="20"/>
       <input type="hidden" id="schoolCode"/>
       <input type="hidden" id="officeCode"/>
+      <div>
+        학년: <input type="number" id="grade" min="1" max="6"/>
+        반: <input type="number" id="classNo" min="1" max="20"/>
+        <button id="loadTodayBtn">오늘 일정 조회</button>
+      </div>
       <p id="selectedSchool"></p>
     </div>
 
-    <!-- 즐겨찾기 -->
+    <!-- 일간 일정 -->
     <div class="card">
-      <h2>즐겨찾기</h2>
-      <button id="saveFavorite">현재 학급 저장</button>
-      <button id="loadFavorite">즐겨찾기 불러오기</button>
-    </div>
-
-    <!-- 오늘 일정 -->
-    <div class="card">
-      <h2>오늘 일정</h2>
-      <button id="loadTodayBtn">조회</button>
+      <h2>📅 오늘 일정</h2>
       <h3>🕒 오늘 시간표</h3>
       <ul id="dailyTimetable"></ul>
       <h3>🍱 오늘 급식</h3>
@@ -42,19 +37,20 @@
 
     <!-- 주간 시간표 -->
     <div class="card">
-      <h2>주간 시간표</h2>
-      <button id="loadWeeklyBtn">조회</button>
+      <h2>📆 주간 시간표</h2>
+      <button id="loadWeeklyBtn">이번 주 시간표 조회</button>
       <div id="weeklyGrid"></div>
     </div>
 
     <!-- 월간 급식 -->
     <div class="card">
-      <h2>월간 급식표</h2>
+      <h2>📅 월간 급식표</h2>
+      <button id="loadMonthlyMealBtn">이번 달 급식 조회</button>
       <div id="monthlyMealGrid" class="calendar"></div>
     </div>
   </div>
 
-  <!-- 모달 -->
+  <!-- 학교 선택 모달 -->
   <div id="schoolModal" class="modal" aria-hidden="true">
     <div class="modal-content">
       <button id="closeModalBtn">닫기</button>
