@@ -17,11 +17,16 @@ const API_KEY = process.env.API_KEY;
 // 정적 파일 서빙
 app.use(express.static(path.join(__dirname, "public")));
 
-// ===== KST 기준 오늘 날짜 함수 =====
+// ===== KST 기준 날짜 함수 =====
 function getTodayKST() {
   const now = new Date();
   const kstTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
   return kstTime.toISOString().slice(0, 10).replace(/-/g, "");
+}
+
+// HTML과 알레르기 숫자 제거
+function cleanMenu(menu) {
+  return menu.replace(/<[^>]+>/g, "").replace(/\([0-9.,]+\)/g, "");
 }
 
 // ===== 헬스체크 =====
@@ -29,28 +34,31 @@ app.get("/health", (req, res) => {
   res.json({ status: "ok", timestamp: new Date().toLocaleString("ko-KR", { timeZone: "Asia/Seoul" }) });
 });
 
-// ===== 학교 검색 =====
+// ===== 학교 검색 + 학년/반 선택 =====
 app.get("/api/searchSchool", async (req, res) => {
-  const { name } = req.query;
+  const { name, grade, classNo } = req.query;
   if (!name) return res.status(400).json({ error: "학교명을 입력하세요." });
 
   try {
-    const url = `https://open.neis.go.kr/hub/schoolInfo?KEY=${API_KEY}&Type=json&SCHUL_NM=${encodeURIComponent(
-      name
-    )}`;
+    const url = `https://open.neis.go.kr/hub/schoolInfo?KEY=${API_KEY}&Type=json&SCHUL_NM=${encodeURIComponent(name)}`;
     const r = await fetch(url);
     const j = await r.json();
 
     if (!j.schoolInfo) return res.json([]);
     const rows = j.schoolInfo[1].row;
 
-    const result = rows.map((s) => ({
+    let result = rows.map((s) => ({
       name: s.SCHUL_NM,
       schoolCode: s.SD_SCHUL_CODE,
       officeCode: s.ATPT_OFCDC_SC_CODE,
       type: s.SCHUL_KND_SC_NM,
       gender: s.COEDU_SC_NM,
     }));
+
+    // 학년/반 필터링
+    if (grade) result = result.filter((r) => r.grade == grade);
+    if (classNo) result = result.filter((r) => r.classNo == classNo);
+
     res.json(result);
   } catch (err) {
     console.error(err);
@@ -130,7 +138,7 @@ app.get("/api/dailyMeal", async (req, res) => {
     if (!j.mealServiceDietInfo) return res.json({ menu: null });
     const rows = j.mealServiceDietInfo[1].row;
 
-    const menu = rows.map((m) => m.DDISH_NM).join("\n");
+    const menu = rows.map((m) => cleanMenu(m.DDISH_NM)).join("\n");
     res.json({ menu });
   } catch (err) {
     console.error(err);
@@ -154,7 +162,7 @@ app.get("/api/monthlyMeal", async (req, res) => {
 
     const result = rows.map((r) => ({
       date: r.MLSV_YMD,
-      menu: r.DDISH_NM,
+      menu: cleanMenu(r.DDISH_NM),
     }));
     res.json(result);
   } catch (err) {
