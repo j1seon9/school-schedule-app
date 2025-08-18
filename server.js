@@ -1,172 +1,101 @@
-import dotenv from "dotenv";
-dotenv.config();
 import express from "express";
-import fetch from "node-fetch";
-import path from "path";
-import { fileURLToPath } from "url";
-import { dirname } from "path";
+import dotenv from "dotenv";
+import fetch from "node-fetch"; // Node18 이상은 global fetch 가능
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
+dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
-const API_KEY = process.env.API_KEY;
 
-// 정적 파일 제공
-app.use(express.static(path.join(__dirname, "public")));
-
-// 헬스 체크
-app.get("/health", (req, res) => {
-  res.json({
-    status: "서버 정상 작동중",
-    timestamp: new Date().toLocaleString("ko-KR", { timeZone: "Asia/Seoul" }),
-  });
-});
+app.use(express.static("public"));
 
 // 학교 검색
-app.get("/api/searchSchool", async (req, res) => {
-  const { name } = req.query;
-  if (!name) return res.status(400).json({ error: "학교명을 입력하세요." });
-
+app.get("/api/searchSchool", async (req,res) => {
+  const name = req.query.name;
+  if(!name) return res.json([]);
   try {
-    const url = `https://open.neis.go.kr/hub/schoolInfo?KEY=${API_KEY}&Type=json&SCHUL_NM=${encodeURIComponent(name)}`;
-    const response = await fetch(url);
-    const data = await response.json();
-    if (!data.schoolInfo) return res.json([]);
-
-    const rows = data.schoolInfo[1].row;
-    const result = rows.map((s) => ({
+    const response = await fetch(`https://open.neis.go.kr/hub/schoolInfo?KEY=${process.env.API_KEY}&Type=json&pIndex=1&pSize=10&SCHUL_NM=${encodeURIComponent(name)}`);
+    const json = await response.json();
+    const data = json.schoolInfo?.[1]?.row?.map(s => ({
       name: s.SCHUL_NM,
-      schoolCode: s.SD_SCHUL_CODE,
-      officeCode: s.ATPT_OFCDC_SC_CODE,
       type: s.SCHUL_KND_SC_NM,
-      gender: s.COEDU_SC_NM,
-    }));
-    res.json(result);
+      gender: s.GENDER,
+      schoolCode: s.SCHUL_CODE,
+      officeCode: s.ATPT_OFCDC_SC_CODE
+    })) || [];
+    res.json(data);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "학교 검색 실패" });
+    res.json([]);
   }
 });
 
 // 일간 시간표
-app.get("/api/dailyTimetable", async (req, res) => {
-  const { schoolCode, officeCode, grade, classNo } = req.query;
-  if (!schoolCode || !officeCode || !grade || !classNo)
-    return res.status(400).json({ error: "파라미터 누락" });
-
-  const today = new Date().toLocaleString("ko-KR", { timeZone: "Asia/Seoul" });
-  const date = today.split(" ")[0].replace(/\./g, "");
-
+app.get("/api/dailyTimetable", async (req,res) => {
+  const {schoolCode, officeCode, grade, classNo, date} = req.query;
   try {
-    const url = `https://open.neis.go.kr/hub/hisTimetable?KEY=${API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${officeCode}&SD_SCHUL_CODE=${schoolCode}&ALL_TI_YMD=${date}&GRADE=${grade}&CLASS_NM=${classNo}`;
-    const response = await fetch(url);
-    const data = await response.json();
-
-    if (!data.hisTimetable) return res.json([]);
-    const rows = data.hisTimetable[1].row;
-
-    const result = rows.map((item) => ({
+    const response = await fetch(`https://open.neis.go.kr/hub/hisTimetable?KEY=${process.env.API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${officeCode}&SD_SCHUL_CODE=${schoolCode}&GRADE=${grade}&CLASS_NM=${classNo}&ALL_TI_YMD=${date}`);
+    const json = await response.json();
+    const data = json.hisTimetable?.[1]?.row?.map(item => ({
       date: item.ALL_TI_YMD,
-      period: item.PERIO,
-      subject: item.ITRT_CNTNT,
-      teacher: item.TEACHER_NM || "미정",
-    }));
-
-    res.json(result);
+      period: item.ITRT_CNTNT.split(" ")[0],
+      subject: item.SUBJECT,
+      teacher: item.TEACHER_NM
+    })) || [];
+    res.json(data);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "일간 시간표 조회 실패" });
+    res.json([]);
   }
 });
 
-// 주간 시간표 (1주 기준)
-app.get("/api/weeklyTimetable", async (req, res) => {
-  const { schoolCode, officeCode, grade, classNo, startDate } = req.query;
-  if (!schoolCode || !officeCode || !grade || !classNo || !startDate)
-    return res.status(400).json({ error: "파라미터 누락" });
-
-  const start = new Date(
-    startDate.slice(0, 4),
-    parseInt(startDate.slice(4, 6)) - 1,
-    parseInt(startDate.slice(6, 8))
-  );
-  const end = new Date(start);
-  end.setDate(start.getDate() + 6);
-  const endDate = end.toISOString().slice(0, 10).replace(/-/g, "");
-
+// 주간 시간표
+app.get("/api/weeklyTimetable", async (req,res) => {
+  const {schoolCode, officeCode, grade, classNo, startDate} = req.query;
   try {
-    const url = `https://open.neis.go.kr/hub/hisTimetable?KEY=${API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${officeCode}&SD_SCHUL_CODE=${schoolCode}&GRADE=${grade}&CLASS_NM=${classNo}&ALL_TI_FROM_YMD=${startDate}&ALL_TI_TO_YMD=${endDate}`;
-    const response = await fetch(url);
-    const data = await response.json();
-
-    if (!data.hisTimetable) return res.json([]);
-    const rows = data.hisTimetable[1].row;
-
-    const result = rows.map((item) => ({
+    const response = await fetch(`https://open.neis.go.kr/hub/hisTimetable?KEY=${process.env.API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${officeCode}&SD_SCHUL_CODE=${schoolCode}&GRADE=${grade}&CLASS_NM=${classNo}`);
+    const json = await response.json();
+    const data = json.hisTimetable?.[1]?.row?.map(item => ({
       date: item.ALL_TI_YMD,
-      period: item.PERIO,
-      subject: item.ITRT_CNTNT,
-      teacher: item.TEACHER_NM || "미정",
-    }));
-
-    res.json(result);
+      period: item.ITRT_CNTNT.split(" ")[0],
+      subject: item.SUBJECT,
+      teacher: item.TEACHER_NM
+    })) || [];
+    res.json(data);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "주간 시간표 조회 실패" });
+    res.json([]);
   }
 });
 
 // 일간 급식
-app.get("/api/dailyMeal", async (req, res) => {
-  const { schoolCode, officeCode } = req.query;
-  if (!schoolCode || !officeCode) return res.status(400).json({ error: "파라미터 누락" });
-
-  const today = new Date().toLocaleString("ko-KR", { timeZone: "Asia/Seoul" });
-  const date = today.split(" ")[0].replace(/\./g, "");
-
+app.get("/api/dailyMeal", async (req,res) => {
+  const {schoolCode, officeCode, date} = req.query;
   try {
-    const url = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${officeCode}&SD_SCHUL_CODE=${schoolCode}&MLSV_YMD=${date}`;
-    const response = await fetch(url);
-    const data = await response.json();
-
-    if (!data.mealServiceDietInfo) return res.json({ menu: "급식 없음" });
-    const rows = data.mealServiceDietInfo[1].row;
-    const menu = rows.map((r) => r.DDISH_NM.replace(/<br\/>/g, "\n")).join("\n");
-
-    res.json({ menu });
+    const response = await fetch(`https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${process.env.API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${officeCode}&SD_SCHUL_CODE=${schoolCode}&MLSV_YMD=${date}`);
+    const json = await response.json();
+    const menu = json.mealServiceDietInfo?.[1]?.row?.[0]?.DDISH_NM?.replace(/<br\/>/g,"\n") || "";
+    res.json({menu});
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "일간 급식 조회 실패" });
+    res.json({menu: ""});
   }
 });
 
 // 월간 급식
-app.get("/api/monthlyMeal", async (req, res) => {
-  const { schoolCode, officeCode, startDate, endDate } = req.query;
-  if (!schoolCode || !officeCode || !startDate || !endDate)
-    return res.status(400).json({ error: "파라미터 누락" });
-
+app.get("/api/monthlyMeal", async (req,res) => {
+  const {schoolCode, officeCode, startDate, endDate} = req.query;
   try {
-    const url = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${officeCode}&SD_SCHUL_CODE=${schoolCode}&MLSV_FROM_YMD=${startDate}&MLSV_TO_YMD=${endDate}`;
-    const response = await fetch(url);
-    const data = await response.json();
-
-    if (!data.mealServiceDietInfo) return res.json([]);
-    const rows = data.mealServiceDietInfo[1].row;
-
-    const result = rows.map((item) => ({
+    const response = await fetch(`https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${process.env.API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${officeCode}&SD_SCHUL_CODE=${schoolCode}&MLSV_FROM_YMD=${startDate}&MLSV_TO_YMD=${endDate}`);
+    const json = await response.json();
+    const data = json.mealServiceDietInfo?.[1]?.row?.map(item => ({
       date: item.MLSV_YMD,
-      menu: item.DDISH_NM.replace(/<br\/>/g, "\n"),
-    }));
-
-    res.json(result);
+      menu: item.DDISH_NM.replace(/<br\/>/g,"\n")
+    })) || [];
+    res.json(data);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "월간 급식 조회 실패" });
+    res.json([]);
   }
 });
 
-// 서버 실행
-app.listen(PORT, () => console.log(`서버 실행 중: http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
