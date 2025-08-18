@@ -12,29 +12,28 @@ body {
   margin: 0;
   color: #222;
 }
+
 .container {
-  max-width: 480px;
-  margin: 0 auto;
-  padding: 12px;
+  max-width: 960px;
+  margin: 24px auto;
+  padding: 16px;
 }
-h1 {
-  text-align: center;
-  color: var(--main-color);
-  margin-bottom: 8px;
-}
+
+h1 { text-align: center; color: var(--main-color); margin-bottom: 12px; }
+
 .card {
   background: var(--card-bg);
   border-radius: 12px;
-  padding: 12px;
-  margin-bottom: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  padding: 14px;
+  margin-bottom: 16px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
 }
+
 input, button, select {
-  padding: 8px;
-  border-radius: 6px;
+  padding: 10px;
+  border-radius: 8px;
   border: 1px solid #e6d6c8;
   margin: 4px 2px;
-  width: 100%;
 }
 button {
   background: var(--main-color);
@@ -43,28 +42,20 @@ button {
   cursor: pointer;
 }
 button:hover { opacity: 0.9; }
+
 ul { padding-left: 1em; }
 pre {
   background: #fafafa;
   padding: 10px;
   border-radius: 6px;
   white-space: pre-wrap;
-  word-break: break-word;
-}
-
-/* 학교 선택 */
-.grade-class {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin-top: 6px;
 }
 
 /* 주간 시간표 grid */
-.weekly-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+#weeklyGrid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
 }
 .week-day {
   border: 1px solid #ddd;
@@ -72,30 +63,21 @@ pre {
   padding: 6px;
   background: #fff;
 }
-.week-day h4 {
-  text-align: left;
-  margin: 0 0 4px;
-  font-size: 0.95em;
-}
-.week-day p {
-  margin: 2px 0;
-  font-size: 0.9em;
-}
+.week-day h4 { text-align: center; margin: 0 0 6px; }
 
 /* 월간 급식 grid */
 .calendar {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 4px;
+  gap: 6px;
 }
 .day-cell {
   border: 1px solid #eee;
   border-radius: 6px;
-  min-height: 60px;
+  min-height: 80px;
   padding: 4px;
-  font-size: 0.8em;
+  font-size: 0.85em;
   background: #fff;
-  word-break: break-word;
 }
 .day-cell strong {
   display: block;
@@ -112,17 +94,15 @@ pre {
   background: rgba(0,0,0,0.4);
   justify-content: center;
   align-items: center;
-  padding: 12px;
 }
 .modal[aria-hidden="false"] { display: flex; }
 .modal-content {
   background: #fff;
-  padding: 12px;
+  padding: 16px;
   border-radius: 8px;
-  width: 100%;
-  max-width: 320px;
+  width: 320px;
 }
-.modal-content ul { list-style: none; padding: 0; margin:0;}
+.modal-content ul { list-style: none; padding: 0; }
 .modal-content li {
   padding: 8px;
   cursor: pointer;
@@ -132,8 +112,8 @@ pre {
   border-radius: 4px;
 }
 
-/* 모바일 반응형 */
-@media (max-width: 480px) {
-  .weekly-grid { flex-direction: column; }
-  .calendar { grid-template-columns: repeat(7, minmax(30px,1fr)); }
+/* responsive */
+@media (max-width: 768px) {
+  #weeklyGrid { grid-template-columns: 1fr; }
+  .calendar { grid-template-columns: repeat(7, minmax(40px, 1fr)); }
 }
