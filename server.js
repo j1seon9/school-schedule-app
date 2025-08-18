@@ -3,9 +3,9 @@ import cors from "cors";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
+import fetch from "node-fetch";
 
 dotenv.config();
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -24,7 +24,6 @@ function formatDate(date) {
 app.get("/api/searchSchool", async (req, res) => {
   const { name } = req.query;
   if (!name) return res.json([]);
-
   try {
     const url = `https://open.neis.go.kr/hub/schoolInfo?KEY=${API_KEY}&Type=json&pIndex=1&pSize=10&SCHUL_NM=${encodeURIComponent(name)}`;
     const r = await fetch(url);
@@ -43,19 +42,19 @@ app.get("/api/searchSchool", async (req, res) => {
   }
 });
 
-// --- 일간 시간표 ---
+// --- 일간 시간표 (모든 학교급) ---
 app.get("/api/dailyTimetable", async (req, res) => {
   const { schoolCode, officeCode, grade, classNo, date } = req.query;
-  if (!schoolCode || !officeCode) return res.json([]);
+  if (!schoolCode || !officeCode || !grade || !classNo) return res.json([]);
 
   try {
-    const url = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${officeCode}&SD_SCHUL_CODE=${schoolCode}&MLSV_FROM_YMD=${date}&MLSV_TO_YMD=${date}`;
+    const url = `https://open.neis.go.kr/hub/elsTimetable?KEY=${API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${officeCode}&SD_SCHUL_CODE=${schoolCode}&GRADE=${grade}&CLASS_NM=${classNo}&ALL_TI_YMD=${date}`;
     const r = await fetch(url);
     const data = await r.json();
-    const timetable = data.mealServiceDietInfo?.[1]?.row?.map(item => ({
-      period: "급식",
-      subject: item.DDISH_NM,
-      teacher: ""
+    const timetable = data.elsTimetable?.[1]?.row?.map(item => ({
+      period: item.ITRT_CNTNT || "1",
+      subject: item.ITRT_CNTNT || "수업",
+      teacher: item.DC_TCH_NM || ""
     })) || [];
     res.json(timetable);
   } catch (err) {
@@ -67,21 +66,21 @@ app.get("/api/dailyTimetable", async (req, res) => {
 // --- 주간 시간표 ---
 app.get("/api/weeklyTimetable", async (req, res) => {
   const { schoolCode, officeCode, grade, classNo, startDate } = req.query;
-  if (!schoolCode || !officeCode) return res.json([]);
+  if (!schoolCode || !officeCode || !grade || !classNo) return res.json([]);
 
   try {
-    const endDate = new Date(startDate.slice(0,4), startDate.slice(4,6)-1, startDate.slice(6,8));
+    const endDate = new Date(Number(startDate.slice(0,4)), Number(startDate.slice(4,6))-1, Number(startDate.slice(6,8)));
     endDate.setDate(endDate.getDate()+6);
     const endStr = formatDate(endDate);
 
-    const url = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${officeCode}&SD_SCHUL_CODE=${schoolCode}&MLSV_FROM_YMD=${startDate}&MLSV_TO_YMD=${endStr}`;
+    const url = `https://open.neis.go.kr/hub/elsTimetable?KEY=${API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${officeCode}&SD_SCHUL_CODE=${schoolCode}&GRADE=${grade}&CLASS_NM=${classNo}&ALL_TI_YMD=${startDate}&ALL_TI_TO_YMD=${endStr}`;
     const r = await fetch(url);
     const data = await r.json();
-    const weekly = data.mealServiceDietInfo?.[1]?.row?.map(item => ({
-      date: item.MLSV_YMD,
-      period: "급식",
-      subject: item.DDISH_NM,
-      teacher: ""
+    const weekly = data.elsTimetable?.[1]?.row?.map(item => ({
+      date: item.ALL_TI_YMD,
+      period: item.ITRT_CNTNT || "1",
+      subject: item.ITRT_CNTNT || "수업",
+      teacher: item.DC_TCH_NM || ""
     })) || [];
     res.json(weekly);
   } catch (err) {
@@ -111,7 +110,6 @@ app.get("/api/dailyMeal", async (req, res) => {
 app.get("/api/monthlyMeal", async (req, res) => {
   const { schoolCode, officeCode, startDate, endDate } = req.query;
   if (!schoolCode || !officeCode) return res.json([]);
-
   try {
     const url = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${officeCode}&SD_SCHUL_CODE=${schoolCode}&MLSV_FROM_YMD=${startDate}&MLSV_TO_YMD=${endDate}`;
     const r = await fetch(url);
@@ -127,6 +125,5 @@ app.get("/api/monthlyMeal", async (req, res) => {
   }
 });
 
-// --- 서버 시작 ---
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
