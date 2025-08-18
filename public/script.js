@@ -20,6 +20,7 @@ function openModal(items) {
   });
   modal.setAttribute("aria-hidden", "false");
 }
+
 closeModalBtn.addEventListener("click", () => modal.setAttribute("aria-hidden","true"));
 
 // 학교 검색
@@ -51,7 +52,6 @@ async function loadDailyTimetable() {
     const ul = qs("dailyTimetable");
     ul.innerHTML = "";
     if (!data.length) return ul.textContent = "시간표 없음";
-
     data.forEach(item => {
       const li = document.createElement("li");
       li.textContent = `${item.period}교시: ${item.subject} (${item.teacher})`;
@@ -77,7 +77,6 @@ async function loadDailyMeal() {
   }
 }
 
-// 일간 조회 버튼
 qs("loadTodayBtn").addEventListener("click", () => {
   loadDailyTimetable();
   loadDailyMeal();
@@ -92,26 +91,24 @@ qs("loadWeeklyBtn").addEventListener("click", async () => {
   if (!schoolCode || !officeCode) return alert("학교를 먼저 선택하세요.");
   if (!grade || !classNo) return alert("학년/반 입력 필요");
 
-  // 조회 기준 주 월요일~금요일
   const today = new Date();
   const day = today.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
   const monday = new Date(today);
-  monday.setDate(today.getDate() - day + 1); // 월요일
-  const friday = new Date(monday);
-  friday.setDate(monday.getDate() + 4); // 금요일
-
+  monday.setDate(today.getDate() + diff);
   const startDate = monday.toISOString().slice(0,10).replace(/-/g,"");
-  const endDate = friday.toISOString().slice(0,10).replace(/-/g,"");
+  const endDate = new Date(monday);
+  endDate.setDate(monday.getDate() + 6);
+  const endStr = endDate.toISOString().slice(0,10).replace(/-/g,"");
 
   try {
-    const r = await fetch(`/api/weeklyTimetable?schoolCode=${schoolCode}&officeCode=${officeCode}&grade=${grade}&classNo=${classNo}&startDate=${startDate}&endDate=${endDate}`);
+    const r = await fetch(`/api/weeklyTimetable?schoolCode=${schoolCode}&officeCode=${officeCode}&grade=${grade}&classNo=${classNo}&startDate=${startDate}&endDate=${endStr}`);
     const data = await r.json();
     const grid = qs("weeklyGrid");
     grid.innerHTML = "";
 
     if (!data.length) return grid.textContent = "주간 시간표 없음";
 
-    // 날짜별 그룹
     const grouped = {};
     data.forEach(item => {
       if (!grouped[item.date]) grouped[item.date] = [];
@@ -143,14 +140,10 @@ qs("loadMonthlyMealBtn").addEventListener("click", async () => {
 
   const base = new Date();
   const year = base.getFullYear();
-  const month = base.getMonth(); // 0~11
-  const firstDay = new Date(year, month, 1);
-  const lastDate = new Date(year, month+1, 0).getDate();
-  const startDate = `${year}${String(month+1).padStart(2,'0')}01`;
-  const endDate = `${year}${String(month+1).padStart(2,'0')}${lastDate}`;
+  const month = String(base.getMonth()+1).padStart(2,'0');
 
   try {
-    const r = await fetch(`/api/monthlyMeal?schoolCode=${schoolCode}&officeCode=${officeCode}&startDate=${startDate}&endDate=${endDate}`);
+    const r = await fetch(`/api/monthlyMeal?schoolCode=${schoolCode}&officeCode=${officeCode}&year=${year}&month=${month}`);
     const data = await r.json();
     const grid = qs("monthlyMealGrid");
     grid.innerHTML = "";
@@ -158,53 +151,42 @@ qs("loadMonthlyMealBtn").addEventListener("click", async () => {
     const meals = {};
     data.forEach(item => meals[item.date] = item.menu);
 
+    const firstDay = new Date(`${year}-${month}-01`);
     const startWeekday = firstDay.getDay();
+    const lastDate = new Date(year, base.getMonth()+1, 0).getDate();
 
-    // 빈칸 채우기
-    for (let i=0; i<startWeekday; i++) {
-      const empty = document.createElement("div");
-      grid.appendChild(empty);
-    }
+    for (let i=0; i<startWeekday; i++) grid.appendChild(document.createElement("div"));
 
     for (let d=1; d<=lastDate; d++) {
-      const dateStr = `${year}${String(month+1).padStart(2,"0")}${String(d).padStart(2,"0")}`;
+      const dateStr = `${year}${month}` + String(d).padStart(2,"0");
       const cell = document.createElement("div");
       cell.className = "day-cell";
-      cell.innerHTML = `<strong>${d}</strong><div>${meals[dateStr] ? meals[dateStr].replace(/<br\/?>/g,", ") : ""}</div>`;
+      const menu = meals[dateStr] ? meals[dateStr].replace(/<br\s*\/?>/gi,", ") : "급식 없음";
+      cell.innerHTML = `<strong>${d}</strong><div>${menu}</div>`;
       grid.appendChild(cell);
     }
-
-    // 마지막 빈칸 채우기
-    const totalCells = startWeekday + lastDate;
-    const remain = 7 - (totalCells % 7);
-    if (remain < 7) {
-      for (let i=0; i<remain; i++) {
-        grid.appendChild(document.createElement("div"));
-      }
-    }
-
   } catch (err) {
     console.error(err);
   }
 });
 
-// 즐겨찾기 저장/불러오기
+// 즐겨찾기
 qs("saveFavorite").addEventListener("click", () => {
-  localStorage.setItem("favorite", JSON.stringify({
-    schoolCode: qs("schoolCode").value,
-    officeCode: qs("officeCode").value,
-    grade: qs("grade").value,
-    classNo: qs("classNo").value
-  }));
-  alert("저장 완료");
+  const schoolCode = qs("schoolCode").value;
+  const officeCode = qs("officeCode").value;
+  const grade = qs("grade").value;
+  const classNo = qs("classNo").value;
+  if (!schoolCode || !officeCode) return alert("학교를 먼저 선택하세요.");
+  localStorage.setItem("favorite", JSON.stringify({schoolCode, officeCode, grade, classNo}));
+  alert("즐겨찾기 저장 완료");
 });
 
 qs("loadFavorite").addEventListener("click", () => {
-  const fav = JSON.parse(localStorage.getItem("favorite")||"{}");
+  const fav = JSON.parse(localStorage.getItem("favorite") || "{}");
   if (!fav.schoolCode) return alert("저장된 즐겨찾기 없음");
   qs("schoolCode").value = fav.schoolCode;
   qs("officeCode").value = fav.officeCode;
   qs("grade").value = fav.grade;
   qs("classNo").value = fav.classNo;
-  alert("불러오기 완료");
+  alert("즐겨찾기 불러오기 완료");
 });
