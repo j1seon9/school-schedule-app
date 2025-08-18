@@ -69,6 +69,12 @@ async function loadDailyTimetable() {
   }
 }
 
+// 오늘 일정 버튼 이벤트
+qs("loadTodayBtn").addEventListener("click", () => {
+  loadDailyTimetable();
+  loadDailyMeal();
+});
+
 // 주간 시간표
 qs("loadWeeklyBtn").addEventListener("click", async () => {
   const schoolCode = qs("schoolCode").value;
@@ -148,53 +154,22 @@ qs("loadMonthlyMealBtn").addEventListener("click", async () => {
     const grid = qs("monthlyMealGrid");
     grid.innerHTML = "";
 
+    // 날짜별로 표시
     const meals = {};
-    data.forEach(item => meals[item.date] = item.menu);
+    data.forEach(item => {
+      meals[item.date] = item.menu;
+    });
 
-    const firstDay = new Date(`${year}-${month}-01`);
-    const startWeekday = firstDay.getDay();
-    const lastDate = new Date(year, base.getMonth()+1, 0).getDate();
-
-    for (let i=0; i<startWeekday; i++) {
-      const empty = document.createElement("div");
-      grid.appendChild(empty);
+    for (let d = 1; d <= new Date(base.getFullYear(), base.getMonth()+1,0).getDate(); d++) {
+      const dayStr = String(d).padStart(2,'0');
+      const dateKey = `${year}${month}${dayStr}`;
+      const div = document.createElement("div");
+      div.className = "day-cell";
+      div.innerHTML = `<strong>${dayStr}일</strong><br>${meals[dateKey] || "급식 없음"}`;
+      grid.appendChild(div);
     }
 
-    for (let d=1; d<=lastDate; d++) {
-      const dateStr = `${year}${month}` + String(d).padStart(2,"0");
-      const cell = document.createElement("div");
-      cell.className = "day-cell";
-      cell.innerHTML = `<strong>${d}</strong><div>${meals[dateStr] || ""}</div>`;
-      grid.appendChild(cell);
-    }
   } catch (err) {
     console.error(err);
   }
-});
-
-// 오늘 조회
-qs("loadTodayBtn").addEventListener("click", () => {
-  loadDailyTimetable();
-  loadDailyMeal();
-});
-
-// 즐겨찾기
-qs("saveFavorite").addEventListener("click", () => {
-  localStorage.setItem("favorite", JSON.stringify({
-    schoolCode: qs("schoolCode").value,
-    officeCode: qs("officeCode").value,
-    grade: qs("grade").value,
-    classNo: qs("classNo").value
-  }));
-  alert("저장 완료");
-});
-
-qs("loadFavorite").addEventListener("click", () => {
-  const fav = JSON.parse(localStorage.getItem("favorite")||"{}");
-  if (!fav.schoolCode) return alert("저장된 즐겨찾기 없음");
-  qs("schoolCode").value = fav.schoolCode;
-  qs("officeCode").value = fav.officeCode;
-  qs("grade").value = fav.grade;
-  qs("classNo").value = fav.classNo;
-  alert("불러오기 완료");
 });
