@@ -1,207 +1,141 @@
-/* 기본 설정 */
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+:root {
+  --main-color: #ff7f50;
+  --bg-color: #fff8f2;
+  --card-bg: #ffffff;
+  --muted: #666;
 }
 
+* { box-sizing: border-box; }
 body {
-  font-family: 'Noto Sans KR', sans-serif;
-  background-color: #fff8f0; /* 부드러운 크림색 배경 */
-  color: #4b2e1e; /* 진한 브라운 글자 */
-  line-height: 1.5;
+  font-family: 'Noto Sans KR', system-ui, sans-serif;
+  background: var(--bg-color);
+  margin: 0;
+  color: #222;
 }
-
-/* 컨테이너 */
 .container {
-  max-width: 480px;
-  margin: 0 auto;
-  padding: 1rem;
-  background-color: #fff5e6; /* 살짝 밝은 오렌지 느낌 */
-  min-height: 100vh;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  max-width: 960px;
+  margin: 24px auto;
+  padding: 16px;
 }
-
-/* 제목 */
 h1 {
   text-align: center;
-  margin-bottom: 1rem;
-  font-size: 1.6rem;
-  color: #d46b08; /* 오렌지 주황 */
+  color: var(--main-color);
+  margin-bottom: 12px;
 }
-
-h2, h3 {
-  text-align: center;
-  margin: 0.5rem 0;
-  color: #a63e00; /* 진한 주황/브라운 */
+h2 {
+  margin: 12px 0;
+  color: var(--main-color);
 }
-
-/* 학교 검색 */
-.search-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 1rem;
+.card {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 16px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
 }
-
-.search-section input {
-  width: 90%;
-  padding: 0.6rem;
-  margin-bottom: 0.5rem;
-  font-size: 1rem;
-  border: 1px solid #e6994c;
-  border-radius: 6px;
+input, button, select {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #e6d6c8;
+  margin: 4px 2px;
 }
-
-.search-section button {
-  width: 90%;
-  padding: 0.6rem;
-  font-size: 1rem;
-  cursor: pointer;
-  background: #ff8c42; /* 포인트 주황 */
+button {
+  background: var(--main-color);
   color: #fff;
-  border: none;
-  border-radius: 6px;
-  transition: 0.3s;
-}
-
-.search-section button:hover {
-  background: #ff9c5e;
-}
-
-#selectedSchool {
-  margin-top: 0.5rem;
   font-weight: bold;
-  font-size: 0.95rem;
-  text-align: center;
-  color: #c2410c; /* 진한 오렌지 */
+  cursor: pointer;
+}
+button:hover { opacity: 0.9; }
+ul { padding-left: 1em; }
+
+pre {
+  background: #fafafa;
+  padding: 10px;
+  border-radius: 6px;
+  white-space: pre-wrap;
 }
 
-/* 일간 급식 */
-.daily-section {
-  margin-bottom: 1rem;
+/* 🔶 일간 조회 */
+#dailyTimetable, #dailyMeal {
+  margin-top: 8px;
+  padding: 10px;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid #f1d5c9;
 }
-
 #dailyMeal {
-  text-align: center;
-  padding: 0.8rem;
-  font-size: 1rem;
-  background-color: #fff3e6; /* 여우 털 느낌 밝은 배경 */
-  border: 1px solid #ffb366;
-  border-radius: 8px;
-  word-break: keep-all;
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 0.95em;
 }
 
-/* 주간 시간표 */
-.weekly-section {
-  margin-bottom: 1rem;
-}
-
-.weekly-grid {
+/* 🔶 주간 시간표 grid */
+#weeklyGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 0.5rem;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
 }
-
 .week-day {
-  background-color: #ffe6cc;
-  border: 1px solid #ffa64d;
+  border: 1px solid #ddd;
   border-radius: 8px;
-  padding: 0.5rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
-  min-height: 80px;
+  padding: 6px;
+  background: #fff;
 }
-
 .week-day h4 {
-  font-size: 0.95rem;
   text-align: center;
-  margin-bottom: 0.3rem;
-  color: #cc5200;
+  margin: 0 0 6px;
+  color: var(--main-color);
 }
 
-.week-day p {
-  font-size: 0.85rem;
-  text-align: center;
-  word-break: keep-all;
-  color: #993d00;
-}
-
-/* 월간 급식 달력 */
-.monthlyMealGrid {
+/* 🔶 월간 급식 grid */
+#monthlyMealGrid.calendar {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 3px;
+  gap: 6px;
 }
-
 .day-cell {
-  background-color: #fff5e6;
-  border: 1px solid #ffa64d;
-  border-radius: 4px;
-  padding: 0.4rem;
-  font-size: 0.85rem;
+  border: 1px solid #eee;
+  border-radius: 6px;
+  min-height: 80px;
+  padding: 4px;
+  font-size: 0.85em;
+  background: #fff;
+}
+.day-cell strong {
+  display: block;
   text-align: center;
+  margin-bottom: 4px;
+  color: var(--main-color);
 }
 
-.day-cell div {
-  margin-top: 0.3rem;
-  color: #d46b08;
-  font-weight: 500;
-  word-break: keep-all;
-}
-
-/* 모달 */
+/* modal */
 .modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.4);
   display: none;
-  align-items: center;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
   justify-content: center;
-  z-index: 1000;
+  align-items: center;
 }
-
-.modal[aria-hidden="false"] {
-  display: flex;
-}
-
+.modal[aria-hidden="false"] { display: flex; }
 .modal-content {
-  background: #fff8f0;
-  width: 90%;
-  max-width: 400px;
-  padding: 1rem;
+  background: #fff;
+  padding: 16px;
   border-radius: 8px;
-  max-height: 80%;
-  overflow-y: auto;
+  width: 320px;
 }
-
-.modal-content h3 {
-  text-align: center;
-  margin-bottom: 1rem;
-  color: #d46b08;
-}
-
-.modal-content ul {
-  list-style: none;
-}
-
+.modal-content ul { list-style: none; padding: 0; }
 .modal-content li {
-  padding: 0.5rem;
-  border-bottom: 1px solid #ffe6cc;
+  padding: 8px;
   cursor: pointer;
-  transition: 0.2s;
 }
-
 .modal-content li:hover {
-  background-color: #ffedd6;
+  background: #f9f3ef;
+  border-radius: 4px;
 }
 
-/* 반응형 */
-@media (max-width: 480px) {
-  .search-section input, .search-section button {
-    width: 95%;
-  }
+/* responsive */
+@media (max-width: 640px) {
+  #weeklyGrid { grid-template-columns: 1fr; }
+  #monthlyMealGrid.calendar { grid-template-columns: repeat(7, minmax(40px, 1fr)); }
 }
