@@ -51,14 +51,25 @@ async function getCached(url) {
   return data;
 }
 
+// ===== KST 날짜 유틸 =====
+function getTodayKST() {
+  const now = new Date();
+  now.setHours(now.getHours() + 9); // UTC+9
+  return now.toISOString().slice(0, 10).replace(/-/g, "");
+}
+
+function formatDateKST(date) {
+  const d = new Date(date);
+  d.setHours(d.getHours() + 9);
+  return d.toISOString().slice(0, 10).replace(/-/g, "");
+}
+
 // --------- 유틸: 학교종류 판별 ---------
 function mapKindToDataset(kindName = "") {
-  // NEIS 반환 예: '초등학교','중학교','고등학교','특수학교', '각종학교' 등
   if (kindName.includes("초")) return "elsTimetable";
   if (kindName.includes("중")) return "mlsTimetable";
   if (kindName.includes("고")) return "hisTimetable";
-  // 특수/각종은 주로 his/mls 중 하나로 운영되나, 우선 his로 시도 후 실패시 mls/els로 폴백 가능
-  return "hisTimetable";
+  return "hisTimetable"; // 기본값
 }
 
 async function resolveDatasetBySchoolCode(schoolCode) {
@@ -88,8 +99,8 @@ app.get("/api/searchSchool", async (req, res) => {
       name: s.SCHUL_NM,
       schoolCode: s.SD_SCHUL_CODE,
       officeCode: s.ATPT_OFCDC_SC_CODE,
-      type: s.SCHUL_KND_SC_NM || "", // 초/중/고/특수/각종...
-      gender: s.COEDU_SC_NM || ""    // 남/여/남여공학
+      type: s.SCHUL_KND_SC_NM || "",
+      gender: s.COEDU_SC_NM || ""
     }));
     res.json(result);
   } catch (err) {
@@ -101,10 +112,10 @@ app.get("/api/searchSchool", async (req, res) => {
 // --------- 일간 시간표 ---------
 app.get("/api/dailyTimetable", async (req, res) => {
   try {
-    const { schoolCode, officeCode, grade, classNo, level } = req.query;
+    const { schoolCode, officeCode, grade, classNo, level, date } = req.query;
     if (!schoolCode || !officeCode || !grade || !classNo) return res.status(400).json([]);
 
-    const today = new Date().toISOString().slice(0,10).replace(/-/g,"");
+    const today = date ? String(date).replace(/-/g, "") : getTodayKST();
     const dataset = level || await resolveDatasetBySchoolCode(schoolCode);
 
     const url = `https://open.neis.go.kr/hub/${dataset}?KEY=${API_KEY}&Type=json`
@@ -134,13 +145,13 @@ app.get("/api/dailyTimetable", async (req, res) => {
 app.get("/api/weeklyTimetable", async (req, res) => {
   try {
     const { schoolCode, officeCode, grade, classNo, startDate, level } = req.query;
-    if (!schoolCode || !officeCode || !grade || !classNo || !startDate) return res.status(400).json([]);
+    if (!schoolCode || !officeCode || !grade || !classNo) return res.status(400).json([]);
 
-    const sd = String(startDate).replace(/-/g,"");
+    const sd = startDate ? String(startDate).replace(/-/g, "") : getTodayKST();
     const sdIso = `${sd.slice(0,4)}-${sd.slice(4,6)}-${sd.slice(6,8)}`;
     const endObj = new Date(sdIso);
-    endObj.setDate(endObj.getDate() + 4); // 5일 범위
-    const ed = endObj.toISOString().slice(0,10).replace(/-/g,"");
+    endObj.setDate(endObj.getDate() + 4);
+    const ed = formatDateKST(endObj);
 
     const dataset = level || await resolveDatasetBySchoolCode(schoolCode);
     const url = `https://open.neis.go.kr/hub/${dataset}?KEY=${API_KEY}&Type=json`
@@ -171,7 +182,8 @@ app.get("/api/dailyMeal", async (req, res) => {
   try {
     const { schoolCode, officeCode, date } = req.query;
     if (!schoolCode || !officeCode) return res.status(400).json({ menu: "" });
-    const d = date ? String(date).replace(/-/g,"") : new Date().toISOString().slice(0,10).replace(/-/g,"");
+    const d = date ? String(date).replace(/-/g, "") : getTodayKST();
+
     const url = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${API_KEY}&Type=json`
       + `&ATPT_OFCDC_SC_CODE=${encodeURIComponent(officeCode)}`
       + `&SD_SCHUL_CODE=${encodeURIComponent(schoolCode)}`
@@ -179,7 +191,7 @@ app.get("/api/dailyMeal", async (req, res) => {
 
     const j = await getCached(url);
     const row = j?.mealServiceDietInfo?.[1]?.row?.[0];
-    const menu = row?.DDISH_NM || "";
+    const menu = row?.DDISH_NM || "방학 중 급식 없음";
     res.json({ menu });
   } catch (err) {
     console.error("dailyMeal error:", err.message || err);
@@ -222,4 +234,3 @@ app.get("*", (req, res) => {
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
 });
-
