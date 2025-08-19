@@ -121,8 +121,7 @@ app.get("/api/dailyTimetable", async (req, res) => {
     const result = rows.map(t => ({
       date: t.ALL_TI_YMD || t.TI_YMD || "",
       period: t.PERIO || t.PERIOD || "",
-      subject: t.ITRT_CNTNT || "",
-      teacher: t.TEACHER_NM || ""
+      subject: t.ITRT_CNTNT || ""
     }));
     res.json(result);
   } catch (err) {
@@ -158,8 +157,7 @@ app.get("/api/weeklyTimetable", async (req, res) => {
     const result = rows.map(t => ({
       date: t.ALL_TI_YMD || t.TI_YMD || "",
       period: t.PERIO || "",
-      subject: t.ITRT_CNTNT || "",
-      teacher: t.TEACHER_NM || ""
+      subject: t.ITRT_CNTNT || ""
     }));
     res.json(result);
   } catch (err) {
@@ -224,3 +222,4 @@ app.get("*", (req, res) => {
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
 });
+
