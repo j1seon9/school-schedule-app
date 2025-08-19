@@ -109,7 +109,7 @@ qs("loadTodayBtn").addEventListener("click", async () => {
     } else {
       data.sort((a,b)=>Number(a.period)-Number(b.period)).forEach(item => {
         const li = document.createElement("li");
-        li.textContent = `${item.period}교시: ${item.subject} (${item.teacher || "미정"})`;
+        li.textContent = `${item.period}교시: ${item.subject}`;
         ul.appendChild(li);
       });
     }
@@ -170,7 +170,7 @@ qs("loadWeeklyBtn").addEventListener("click", async () => {
         .sort((a,b)=>Number(a.period)-Number(b.period))
         .forEach(it => {
           const p = document.createElement("div");
-          p.textContent = `${it.period}교시: ${it.subject} (${it.teacher || "미정"})`;
+          p.textContent = `${it.period}교시: ${it.subject}`;
           div.appendChild(p);
         });
       grid.appendChild(div);
@@ -231,3 +231,4 @@ qs("loadMonthlyMealBtn").addEventListener("click", async () => {
     alert("월간 급식 조회 중 오류가 발생했습니다.");
   }
 });
+
