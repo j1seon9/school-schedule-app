@@ -17,7 +17,6 @@ function openModal(items) {
       qs("officeCode").value = s.officeCode;
       qs("schoolType").value = s.type || "";
       qs("selectedSchool").textContent = `${s.name} (${s.type || "학교"})`;
-      // 자동 즐겨찾기 저장
       localStorage.setItem("favoriteSchool", JSON.stringify(s));
       modal.setAttribute("aria-hidden", "true");
       modal.style.display = "none";
@@ -191,7 +190,6 @@ qs("loadMonthlyMealBtn").addEventListener("click", async () => {
 
   if (!schoolCode || !officeCode) return alert("학교를 선택하세요.");
 
-  // 기준일 미입력 시 오늘 날짜
   if (!base) {
     const d = new Date();
     base = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-01`;
@@ -213,11 +211,9 @@ qs("loadMonthlyMealBtn").addEventListener("click", async () => {
       return;
     }
 
-    // 날짜→메뉴 맵
     const map = {};
     data.forEach(it => { map[it.date] = it.menu; });
 
-    // 달력 배치
     const firstDay = new Date(year, month-1, 1).getDay();
     for (let i=0; i<firstDay; i++) grid.appendChild(document.createElement("div"));
     for (let d=1; d<=last; d++) {
@@ -232,3 +228,31 @@ qs("loadMonthlyMealBtn").addEventListener("click", async () => {
   }
 });
 
+// ===== 날짜 자동 선택 (KST 기준) =====
+function setDefaultDates() {
+  const today = new Date();
+  const kstOffset = 9 * 60; // KST는 UTC+9
+  const utc = today.getTime() + (today.getTimezoneOffset() * 60000);
+  const kstDate = new Date(utc + (kstOffset * 60000));
+
+  // 일간 조회 기본 오늘
+  const dailyEl = qs("dailyDate");
+  if (dailyEl && !dailyEl.value) dailyEl.value = kstDate.toISOString().slice(0,10);
+
+  // 주간 조회 기본 이번 주 월요일
+  const weekEl = qs("weekStartDate");
+  if (weekEl && !weekEl.value) {
+    const day = kstDate.getDay(); // 0=일, 1=월 ...
+    const diff = day === 0 ? -6 : 1 - day; // 일요일이면 지난 월요일
+    const monday = new Date(kstDate);
+    monday.setDate(kstDate.getDate() + diff);
+    weekEl.value = monday.toISOString().slice(0,10);
+  }
+
+  // 월간 조회 기본 이번 달 1일
+  const monthEl = qs("mealMonthDate");
+  if (monthEl && !monthEl.value) monthEl.value = `${kstDate.getFullYear()}-${String(kstDate.getMonth()+1).padStart(2,"0")}-01`;
+}
+
+// 페이지 로드 시 자동 적용
+document.addEventListener("DOMContentLoaded", setDefaultDates);
