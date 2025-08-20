@@ -26,16 +26,19 @@ function openModal(items) {
   modal.setAttribute("aria-hidden", "false");
   modal.style.display = "flex";
 }
+
 closeModalBtn.addEventListener("click", () => {
   modal.setAttribute("aria-hidden", "true");
   modal.style.display = "none";
 });
+
 modal.addEventListener("click", (e) => {
   if (e.target === modal) {
     modal.setAttribute("aria-hidden", "true");
     modal.style.display = "none";
   }
 });
+
 document.addEventListener("keydown", e => {
   if (e.key === "Escape") {
     modal.setAttribute("aria-hidden", "true");
@@ -181,7 +184,6 @@ qs("loadWeeklyBtn").addEventListener("click", async () => {
 });
 
 // ===== 월간 급식 (기준일 달 자동) =====
-async function loadMonthlyMeal() {
 qs("loadMonthlyMealBtn").addEventListener("click", async () => {
   const schoolCode = qs("schoolCode").value;
   const officeCode = qs("officeCode").value;
@@ -220,14 +222,14 @@ qs("loadMonthlyMealBtn").addEventListener("click", async () => {
     for (let d=1; d<=last; d++) {
       const key = `${year}${String(month).padStart(2,"0")}${String(d).padStart(2,"0")}`;
       const cell = document.createElement("div");
-      cell.innerHTML = `<strong>${d}</strong>${(map[key]||"").replace(/<br\s*\/?>/g, ", ")}`;
+      cell.innerHTML = `<strong>${d}</strong>${(map[key]||"").replace(/<br\s*\/?>/gi, ", ")}`;
       grid.appendChild(cell);
     }
   } catch (err) {
     console.error(err);
     alert("월간 급식 조회 중 오류가 발생했습니다.");
   }
-});}
+});
 
 // ===== 날짜 자동 선택 (KST 기준) =====
 function setDefaultDates() {
@@ -236,26 +238,24 @@ function setDefaultDates() {
   const utc = today.getTime() + (today.getTimezoneOffset() * 60000);
   const kstDate = new Date(utc + (kstOffset * 60000));
 
-  // 일간 조회 기본 오늘
-  const dailyEl = qs("dailyDate");
-  if (dailyEl && !dailyEl.value) dailyEl.value = kstDate.toISOString().slice(0,10);
+  // 월간 조회 기본 이번 달 1일
+  const monthEl = qs("mealMonthDate");
+  if (monthEl && !monthEl.value) monthEl.value = `${kstDate.getFullYear()}-${String(kstDate.getMonth()+1).padStart(2,"0")}-01`;
 
   // 주간 조회 기본 이번 주 월요일
   const weekEl = qs("weekStartDate");
   if (weekEl && !weekEl.value) {
     const day = kstDate.getDay(); // 0=일, 1=월 ...
-    const diff = day === 0 ? -6 : 1 - day; // 일요일이면 지난 월요일
+    const diff = day === 0 ? -6 : 1 - day;
     const monday = new Date(kstDate);
     monday.setDate(kstDate.getDate() + diff);
     weekEl.value = monday.toISOString().slice(0,10);
   }
 
-  // 월간 조회 기본 이번 달 1일
-  const monthEl = qs("mealMonthDate");
-  if (monthEl && !monthEl.value) monthEl.value = `${kstDate.getFullYear()}-${String(kstDate.getMonth()+1).padStart(2,"0")}-01`;
+// 일간 조회 기본 오늘
+  const dailyEl = qs("dailyDate");
+  if (dailyEl && !dailyEl.value) dailyEl.value = kstDate.toISOString().slice(0,10);
 }
 
 // 페이지 로드 시 자동 적용
 document.addEventListener("DOMContentLoaded", setDefaultDates);
-
-
