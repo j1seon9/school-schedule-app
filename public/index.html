@@ -11,22 +11,22 @@
     <h1>학교 시간표 & 급식 조회</h1>
 
     <!-- 학교 검색 -->
-    <section class="search-section">
+    <section class="card search-section">
       <input id="schoolInput" type="text" placeholder="학교 이름 입력" />
       <button id="searchBtn">검색</button>
       <ul id="schoolResults"></ul>
     </section>
 
     <!-- 학급 선택 -->
-    <section id="classSection" class="hidden">
+    <section id="classSection" class="card hidden">
       <h2 id="selectedSchool"></h2>
-      <input id="gradeInput" type="number" placeholder="학년" min="1" max="12" />
+      <input id="gradeInput" type="number" placeholder="학년" min="1" max="20" />
       <input id="classInput" type="number" placeholder="반" min="1" />
       <button id="loadDataBtn">조회</button>
     </section>
 
     <!-- 일간 -->
-    <section id="dailySection" class="hidden">
+    <section id="dailySection" class="card hidden">
       <h2>오늘 시간표</h2>
       <ul id="dailyTimetable"></ul>
       <h2>오늘 급식</h2>
@@ -34,16 +34,24 @@
     </section>
 
     <!-- 주간 -->
-    <section id="weeklySection" class="hidden">
+    <section id="weeklySection" class="card hidden">
       <h2>주간 시간표</h2>
-      <div id="weeklyTimetable"></div>
+      <div id="weeklyTimetable" class="grid-week"></div>
     </section>
 
     <!-- 월간 -->
-    <section id="monthlySection" class="hidden">
+    <section id="monthlySection" class="card hidden">
       <h2>월간 급식</h2>
-      <div id="monthlyMeal" class="calendar"></div>
+      <div id="monthlyMeal" class="calendar calendar-grid"></div>
     </section>
+  </div>
+
+  <!-- Modal -->
+  <div id="schoolModal" class="modal" aria-hidden="true">
+    <div class="modal-content">
+      <button id="closeModalBtn">닫기</button>
+      <ul id="schoolList"></ul>
+    </div>
   </div>
 
   <script src="script.js"></script>
