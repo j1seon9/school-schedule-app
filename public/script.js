@@ -256,3 +256,4 @@ function setDefaultDates() {
 
 // 페이지 로드 시 자동 적용
 document.addEventListener("DOMContentLoaded", setDefaultDates);
+
