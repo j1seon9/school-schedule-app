@@ -199,31 +199,67 @@ app.get("/api/dailyMeal", async (req, res) => {
   }
 });
 
-// --------- 월간 급식 ---------
-app.get("/api/monthlyMeal", async (req, res) => {
-  try {
-    const { schoolCode, officeCode, startDate, endDate } = req.query;
-    if (!schoolCode || !officeCode || !startDate || !endDate) return res.status(400).json([]);
+// ===== 월간 급식 조회 함수 =====
+async function loadMonthlyMeal() {
+  const schoolCode = qs("schoolCode").value;
+  const officeCode = qs("officeCode").value;
+  let base = qs("mealMonthDate").value;
+  const grid = qs("monthlyMealGrid");
+  grid.innerHTML = "";
 
-    const url = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${API_KEY}&Type=json`
-      + `&ATPT_OFCDC_SC_CODE=${encodeURIComponent(officeCode)}`
-      + `&SD_SCHUL_CODE=${encodeURIComponent(schoolCode)}`
-      + `&MLSV_FROM_YMD=${encodeURIComponent(startDate)}&MLSV_TO_YMD=${encodeURIComponent(endDate)}`;
-
-    const j = await getCached(url);
-    const rows = j?.mealServiceDietInfo?.[1]?.row;
-    if (!Array.isArray(rows)) return res.json([]);
-
-    const result = rows.map(m => ({
-      date: m.MLSV_YMD,
-      menu: m.DDISH_NM || ""
-    }));
-    res.json(result);
-  } catch (err) {
-    console.error("monthlyMeal error:", err.message || err);
-    res.status(500).json([]);
+  if (!schoolCode || !officeCode) {
+    grid.textContent = "학교를 선택하세요.";
+    return;
   }
-});
+
+  // ✅ 조회일 기준 달 자동 설정 (KST 기준)
+  const today = new Date();
+  const kstToday = new Date(today.getTime() + (9 * 60 * 60 * 1000));
+  if (!base) {
+    base = `${kstToday.getFullYear()}-${String(kstToday.getMonth() + 1).padStart(2, "0")}-${String(kstToday.getDate()).padStart(2, "0")}`;
+    qs("mealMonthDate").value = base;
+  }
+
+  const year = Number(base.slice(0, 4));
+  const month = Number(base.slice(5, 7));
+
+  const start = `${year}${String(month).padStart(2, "0")}01`;
+  const last = new Date(year, month, 0).getDate();
+  const end = `${year}${String(month).padStart(2, "0")}${String(last).padStart(2, "0")}`;
+
+  try {
+    const res = await fetch(`/api/monthlyMeal?schoolCode=${schoolCode}&officeCode=${officeCode}&startDate=${start}&endDate=${end}`);
+    const data = await res.json();
+
+    if (!Array.isArray(data) || data.length === 0) {
+      grid.textContent = "방학 중 급식 없음";
+      return;
+    }
+
+    const map = {};
+    data.forEach(it => { map[it.date] = it.menu; });
+
+    const firstDay = new Date(year, month - 1, 1).getDay();
+    for (let i = 0; i < firstDay; i++) grid.appendChild(document.createElement("div"));
+
+    for (let d = 1; d <= last; d++) {
+      const key = `${year}${String(month).padStart(2, "0")}${String(d).padStart(2, "0")}`;
+      const cell = document.createElement("div");
+      cell.innerHTML = `<strong>${d}</strong>${(map[key] || "").replace(/<br\s*\/?>/g, ", ")}`;
+      grid.appendChild(cell);
+    }
+  } catch (err) {
+    console.error(err);
+    alert("월간 급식 조회 중 오류가 발생했습니다.");
+  }
+}
+
+// ===== 버튼 클릭 시 수동 조회도 가능 =====
+qs("loadMonthlyMealBtn").addEventListener("click", loadMonthlyMeal);
+
+// ===== 페이지 로드 시 자동 조회 =====
+document.addEventListener("DOMContentLoaded", loadMonthlyMeal);
+
 
 // --------- SPA fallback ---------
 app.get("*", (req, res) => {
@@ -234,3 +270,4 @@ app.get("*", (req, res) => {
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
 });
+
