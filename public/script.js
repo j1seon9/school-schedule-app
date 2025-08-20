@@ -181,6 +181,7 @@ qs("loadWeeklyBtn").addEventListener("click", async () => {
 });
 
 // ===== 월간 급식 (기준일 달 자동) =====
+async function loadMonthlyMeal() {
 qs("loadMonthlyMealBtn").addEventListener("click", async () => {
   const schoolCode = qs("schoolCode").value;
   const officeCode = qs("officeCode").value;
@@ -226,7 +227,7 @@ qs("loadMonthlyMealBtn").addEventListener("click", async () => {
     console.error(err);
     alert("월간 급식 조회 중 오류가 발생했습니다.");
   }
-});
+});}
 
 // ===== 날짜 자동 선택 (KST 기준) =====
 function setDefaultDates() {
@@ -256,4 +257,5 @@ function setDefaultDates() {
 
 // 페이지 로드 시 자동 적용
 document.addEventListener("DOMContentLoaded", setDefaultDates);
+
 
