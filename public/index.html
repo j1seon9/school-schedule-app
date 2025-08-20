@@ -1,51 +1,96 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>학교 시간표 & 급식 조회</title>
-  <link rel="stylesheet" href="styles.css" />
-</head>
-<body>
-  <div class="container">
-    <h1>학교 시간표 & 급식 조회</h1>
+// ===== 유틸 =====
+function getTodayKST() {
+  const now = new Date();
+  now.setHours(now.getHours() + 9);
+  return now.toISOString().slice(0, 10);
+}
+function formatDateKST(d) {
+  const dt = new Date(d);
+  dt.setHours(dt.getHours() + 9);
+  return dt.toISOString().slice(0, 10);
+}
 
-    <!-- 학교 검색 -->
-    <section class="search-section">
-      <input id="schoolInput" type="text" placeholder="학교 이름 입력" />
-      <button id="searchBtn">검색</button>
-      <ul id="schoolResults"></ul>
-    </section>
+// ===== 전역 상태 =====
+let selectedSchool = null;
 
-    <!-- 학급 선택 -->
-    <section id="classSection" class="hidden">
-      <h2 id="selectedSchool"></h2>
-      <input id="gradeInput" type="number" placeholder="학년" min="1" max="12" />
-      <input id="classInput" type="number" placeholder="반" min="1" />
-      <button id="loadDataBtn">조회</button>
-    </section>
+// ===== DOM =====
+const qs = id => document.getElementById(id);
 
-    <!-- 일간 -->
-    <section id="dailySection" class="hidden">
-      <h2>오늘 시간표</h2>
-      <ul id="dailyTimetable"></ul>
-      <h2>오늘 급식</h2>
-      <div id="dailyMeal"></div>
-    </section>
+// ===== 학교 검색 =====
+qs("searchBtn").addEventListener("click", async () => {
+  const name = qs("schoolInput").value.trim();
+  if (!name) return;
 
-    <!-- 주간 -->
-    <section id="weeklySection" class="hidden">
-      <h2>주간 시간표</h2>
-      <div id="weeklyTimetable"></div>
-    </section>
+  const res = await fetch(`/api/searchSchool?name=${encodeURIComponent(name)}`);
+  const schools = await res.json();
+  const ul = qs("schoolResults");
+  ul.innerHTML = "";
 
-    <!-- 월간 -->
-    <section id="monthlySection" class="hidden">
-      <h2>월간 급식</h2>
-      <div id="monthlyMeal" class="calendar"></div>
-    </section>
-  </div>
+  schools.forEach(s => {
+    const li = document.createElement("li");
+    li.textContent = `${s.name} (${s.type}, ${s.gender})`;
+    li.addEventListener("click", () => {
+      selectedSchool = s;
+      qs("selectedSchool").textContent = `${s.name} 선택됨`;
+      qs("classSection").classList.remove("hidden");
+    });
+    ul.appendChild(li);
+  });
+});
 
-  <script src="script.js"></script>
-</body>
-</html>
+// ===== 데이터 조회 =====
+qs("loadDataBtn").addEventListener("click", async () => {
+  if (!selectedSchool) return;
+  const grade = qs("gradeInput").value;
+  const classNo = qs("classInput").value;
+  if (!grade || !classNo) return;
+
+  const today = getTodayKST().replace(/-/g, "");
+
+  // 일간 시간표
+  const dRes = await fetch(`/api/dailyTimetable?schoolCode=${selectedSchool.schoolCode}&officeCode=${selectedSchool.officeCode}&grade=${grade}&classNo=${classNo}`);
+  const daily = await dRes.json();
+  qs("dailyTimetable").innerHTML = daily.length ? daily.map(d => `<li>${d.period}교시: ${d.subject}</li>`).join("") : "<li>수업 없음</li>";
+
+  // 오늘 급식
+  const mRes = await fetch(`/api/dailyMeal?schoolCode=${selectedSchool.schoolCode}&officeCode=${selectedSchool.officeCode}&date=${today}`);
+  const meal = await mRes.json();
+  qs("dailyMeal").textContent = meal.menu || "급식 없음";
+
+  qs("dailySection").classList.remove("hidden");
+
+  // 주간 시간표
+  const wRes = await fetch(`/api/weeklyTimetable?schoolCode=${selectedSchool.schoolCode}&officeCode=${selectedSchool.officeCode}&grade=${grade}&classNo=${classNo}&startDate=${today}`);
+  const weekly = await wRes.json();
+
+  const weeklyDiv = qs("weeklyTimetable");
+  weeklyDiv.innerHTML = "";
+  const grouped = {};
+  weekly.forEach(d => {
+    if (!grouped[d.date]) grouped[d.date] = [];
+    grouped[d.date].push(d);
+  });
+  for (const [date, items] of Object.entries(grouped)) {
+    const dayBlock = document.createElement("div");
+    dayBlock.classList.add("day-block");
+    dayBlock.innerHTML = `<h3>${date}</h3><ul>${items.map(i => `<li>${i.period}교시: ${i.subject}</li>`).join("")}</ul>`;
+    weeklyDiv.appendChild(dayBlock);
+  }
+  qs("weeklySection").classList.remove("hidden");
+
+  // 월간 급식
+  const startDate = today.slice(0,6) + "01";
+  const endDate = today.slice(0,6) + "31";
+  const moRes = await fetch(`/api/monthlyMeal?schoolCode=${selectedSchool.schoolCode}&officeCode=${selectedSchool.officeCode}&startDate=${startDate}&endDate=${endDate}`);
+  const monthly = await moRes.json();
+
+  const calendarDiv = qs("monthlyMeal");
+  calendarDiv.innerHTML = "";
+  monthly.forEach(m => {
+    const cell = document.createElement("div");
+    cell.classList.add("calendar-cell");
+    cell.innerHTML = `<strong>${m.date.slice(6,8)}일</strong><br>${m.menu}`;
+    calendarDiv.appendChild(cell);
+  });
+  qs("monthlySection").classList.remove("hidden");
+});
