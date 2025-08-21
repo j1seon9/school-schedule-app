@@ -11,22 +11,35 @@
     <h1>학교 시간표 & 급식 조회</h1>
 
     <!-- 학교 검색 -->
-    <section class="card search-section">
-      <input id="schoolInput" type="text" placeholder="학교 이름 입력" />
-      <button id="searchBtn">검색</button>
-      <ul id="schoolResults"></ul>
+    <section class="card">
+      <div class="row">
+        <input id="schoolName" type="text" placeholder="학교 이름 입력" />
+        <button id="searchSchoolBtn">검색</button>
+        <button id="favoriteBtn">즐겨찾기 저장</button>
+      </div>
+      <div id="selectedSchool" class="muted"></div>
+      <input id="schoolCode" type="hidden" />
+      <input id="officeCode" type="hidden" />
+      <input id="schoolType" type="hidden" />
     </section>
 
     <!-- 학급 선택 -->
-    <section id="classSection" class="card hidden">
-      <h2 id="selectedSchool"></h2>
-      <input id="gradeInput" type="number" placeholder="학년" min="1" max="20" />
-      <input id="classInput" type="number" placeholder="반" min="1" />
-      <button id="loadDataBtn">조회</button>
+    <section class="card">
+      <div class="row">
+        <input id="grade" type="number" placeholder="학년" min="1" max="20" />
+        <input id="classNo" type="number" placeholder="반" min="1" />
+        <input id="weekStartDate" type="date" />
+        <input id="mealMonthDate" type="date" />
+      </div>
+      <div class="row">
+        <button id="loadTodayBtn">오늘 일정 조회</button>
+        <button id="loadWeeklyBtn">주간 시간표 조회</button>
+        <button id="loadMonthlyMealBtn">월간 급식 조회</button>
+      </div>
     </section>
 
     <!-- 일간 -->
-    <section id="dailySection" class="card hidden">
+    <section class="card">
       <h2>오늘 시간표</h2>
       <ul id="dailyTimetable"></ul>
       <h2>오늘 급식</h2>
@@ -34,15 +47,18 @@
     </section>
 
     <!-- 주간 -->
-    <section id="weeklySection" class="card hidden">
+    <section class="card">
       <h2>주간 시간표</h2>
-      <div id="weeklyTimetable" class="grid-week"></div>
+      <div id="weeklyGrid" class="grid-week"></div>
     </section>
 
     <!-- 월간 -->
-    <section id="monthlySection" class="card hidden">
+    <section class="card">
       <h2>월간 급식</h2>
-      <div id="monthlyMeal" class="calendar calendar-grid"></div>
+      <div class="calendar-header calendar-grid">
+        <div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div>
+      </div>
+      <div id="monthlyMealGrid" class="calendar-body"></div>
     </section>
   </div>
 
