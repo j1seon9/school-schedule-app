@@ -151,7 +151,7 @@ async function loadToday() {
 }
 qs("loadTodayBtn").addEventListener("click", loadToday);
 
-// ===== 주간 시간표 (5일) =====
+// ===== 주간 시간표 (조회일 → 월요일로 보정) =====
 async function loadWeekly() {
   const schoolCode = qs("schoolCode").value;
   const officeCode = qs("officeCode").value;
@@ -160,7 +160,15 @@ async function loadWeekly() {
   const startDateEl = qs("weekStartDate");
   if (!schoolCode || !officeCode || !grade || !classNo || !startDateEl.value) return;
 
-  const startDate = startDateEl.value.replace(/-/g,"");
+  // 🟢 조회 날짜를 항상 월요일로 보정 + input 값도 수정
+  const selDate = new Date(startDateEl.value);
+  const day = selDate.getDay(); // 0=일, 1=월 ...
+  const diff = day === 0 ? -6 : 1 - day;
+  selDate.setDate(selDate.getDate() + diff);
+  const mondayStr = selDate.toISOString().slice(0,10);
+  startDateEl.value = mondayStr; // input 값 보정
+  const startDate = mondayStr.replace(/-/g,"");
+
   try {
     const res = await fetch(`/api/weeklyTimetable?schoolCode=${schoolCode}&officeCode=${officeCode}&grade=${grade}&classNo=${classNo}&startDate=${startDate}`);
     const data = await res.json();
