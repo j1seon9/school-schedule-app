@@ -98,7 +98,8 @@ app.get("/api/searchSchool", async (req, res) => {
       schoolCode: s.SD_SCHUL_CODE || "",
       officeCode: s.ATPT_OFCDC_SC_CODE || "",
       type: s.SCHUL_KND_SC_NM || "",
-      gender: s.COEDU_SC_NM || ""
+      gender: s.COEDU_SC_NM || "",
+      regioName: s.ATPT_OFCDC_SC_NM || ""
     }));
     res.json(out);
   } catch (err) {
@@ -217,3 +218,4 @@ app.get("*", (req, res) => res.sendFile(path.join(__dirname, "public", "index.ht
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`✅ Server running on port ${PORT}`);
 });
+
