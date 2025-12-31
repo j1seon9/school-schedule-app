@@ -129,3 +129,15 @@ ul#dailyTimetable { padding-left: 1.2em; margin-top: 8px; }
   input, button { width: 100%; }
   .grid-week { grid-template-columns: 1fr; }
 }
+
+.loading{
+  text-align:center;
+  padding: 12px;
+  margein-bottom: 12px;
+  fount-weight: 700;
+  color: var(--main-color);
+}
+
+.hidden{
+  display: none;
+}
