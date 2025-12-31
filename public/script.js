@@ -8,7 +8,7 @@ function showLoading() {
   loadingEl.classList.remove("hidden");
 }
 
-function hideloading() {
+function hideLoading() {
 loadingEl.classList.add("hidden")
 }
 
@@ -141,7 +141,7 @@ qs("searchSchoolBtn").addEventListener("click", async () => {
 
 // ===== 오늘 시간표 + 급식 =====
 async function loadToday() {
-  showloading();
+  showLoading();
   Try{
   const schoolCode = qs("schoolCode").value;
   const officeCode = qs("officeCode").value;
@@ -346,7 +346,7 @@ async function autoQuery() {
     loadMonthlyMeal()
   ]);
   }finally{
-    hideloading();}
+    hideLoading();}
 }
 
 // ===== 초기화 =====
@@ -359,6 +359,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     autoQuery();
   }
 });
+
 
 
 
