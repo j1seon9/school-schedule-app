@@ -1,6 +1,6 @@
 {
   "name": "school-schedule-app",
-  "version": "1.0.0",
+  "version": "1.0.9",
   "description": "학교 시간표 및 급식 웹앱",
   "type": "module",
   "scripts": {
@@ -16,3 +16,4 @@
     "node": ">=18"
   }
 }
+
