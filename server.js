@@ -8,7 +8,7 @@ import { fileURLToPath } from "url";
 
 dotenv.config();
 const API_KEY = process.env.API_KEY;
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8000;
 
 if (!API_KEY) {
   console.error("❌ ERROR: .env에 API_KEY가 필요합니다.");
@@ -218,6 +218,7 @@ app.get("*", (req, res) => res.sendFile(path.join(__dirname, "public", "index.ht
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`✅ Server running on port ${PORT}`);
 });
+
 
 
 
