@@ -9,7 +9,9 @@
 <body>
   <div class="container">
     <h1>학교 시간표 & 급식 조회</h1>
-    <div id="loading" class="loadong hidden">
+
+    <!-- 로딩 -->
+    <div id="loading" class="loading hidden">
       데이터를 로딩 중입니다.
     </div>
 
@@ -26,11 +28,11 @@
       <input id="schoolType" type="hidden" />
     </section>
 
-    <!-- 학급 선택 -->
+    <!-- 학급 -->
     <section class="card">
       <div class="row">
-        <input id="grade" type="number" placeholder="학년" min="1" max="20" />
-        <input id="classNo" type="number" placeholder="반" min="1" />
+        <input id="grade" type="number" placeholder="학년" />
+        <input id="classNo" type="number" placeholder="반" />
         <input id="weekStartDate" type="date" />
         <input id="mealMonthDate" type="date" />
       </div>
@@ -76,4 +78,3 @@
   <script src="script.js"></script>
 </body>
 </html>
-
