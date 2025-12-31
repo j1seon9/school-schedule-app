@@ -50,14 +50,16 @@ function openModal(items) {
       // 선택 즉시 자동조회
       autoQuery();
     });
-
+    
     modalList.appendChild(li);
   });
 
+  modal.style.display  = "flex";
   modal.setAttribute("aria-hidden", "false");
 }
 
 function closeModal() {
+  modal.style.display = "none";
   modal.setAttribute("aria-hidden", "true");
 }
 closeModalBtn.addEventListener("click", closeModal);
@@ -357,6 +359,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     autoQuery();
   }
 });
+
 
 
 
