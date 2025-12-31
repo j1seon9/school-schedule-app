@@ -139,6 +139,8 @@ qs("searchSchoolBtn").addEventListener("click", async () => {
 
 // ===== 오늘 시간표 + 급식 =====
 async function loadToday() {
+  showloading();
+  Try{
   const schoolCode = qs("schoolCode").value;
   const officeCode = qs("officeCode").value;
   const grade = qs("grade").value;
@@ -185,12 +187,15 @@ async function loadToday() {
   } catch (err) {
     console.error(err);
     alert("급식 조회 중 오류");
+  }finally{
+    hideLoading();
   }
 }
 qs("loadTodayBtn").addEventListener("click", loadToday);
 
 // ===== 주간 시간표 (조회일 → 월요일로 자동 보정) =====
 async function loadWeekly() {
+  showLoading();
   const schoolCode = qs("schoolCode").value;
   const officeCode = qs("officeCode").value;
   const grade = qs("weekGrade") ? qs("weekGrade").value : qs("grade").value;
@@ -331,11 +336,15 @@ function setDefaultDates() {
 }
 
 async function autoQuery() {
+  showLoading();
+  try{
   await Promise.all([
     loadToday(),
     loadWeekly(),
     loadMonthlyMeal()
   ]);
+  }finally{
+    hideloading();}
 }
 
 // ===== 초기화 =====
@@ -348,5 +357,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     autoQuery();
   }
 });
+
 
 
