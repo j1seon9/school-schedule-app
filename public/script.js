@@ -2,6 +2,18 @@
 const qs = id => document.getElementById(id);
 const formatYMD = ymd => String(ymd||"").replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3");
 
+const loadingEl = qs("loading")
+
+function showLoading() {
+  loadingEl.classList.remove("hidden");
+}
+
+function hideloading() {
+loadingEl.classList.add("hidden")
+}
+
+
+
 // KST 보정
 function nowKST() {
   const utc = Date.now();
@@ -336,4 +348,5 @@ document.addEventListener("DOMContentLoaded", async () => {
     autoQuery();
   }
 });
+
 
