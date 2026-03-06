@@ -11,7 +11,10 @@
 <div class="container">
   <header class="header">
     <h1>학교 시간표 & 급식</h1>
-    <button id="darkModeToggle">🌙</button>
+    <div class="header-actions">
+      <a class="admin-link" href="/admin/admin.html">관리자</a>
+      <button id="darkModeToggle">🌙</button>
+    </div>
   </header>
 
   <div id="loading" class="loading hidden">데이터 불러오는 중…</div>
@@ -28,6 +31,11 @@
   <section class="card">
     <input id="grade" type="number" placeholder="학년">
     <input id="classNo" type="number" placeholder="반">
+  </section>
+
+  <section class="card">
+    <h2>공지사항</h2>
+    <ul id="noticeBoard" class="notice-board"></ul>
   </section>
 
   <section class="card">

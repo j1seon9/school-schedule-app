@@ -28,6 +28,22 @@ body{
   align-items:center;
 }
 
+.header-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.admin-link {
+  display: inline-block;
+  padding: 8px 10px;
+  border-radius: 8px;
+  text-decoration: none;
+  background: #334155;
+  color: #fff;
+  font-weight: 700;
+}
+
 .card{
   background:var(--card-bg);
   margin-bottom:12px;
@@ -69,6 +85,17 @@ button{
 
 .loading{text-align:center;font-weight:700}
 .hidden{display:none}
+
+.notice-board {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.notice-board li {
+  border-bottom: 1px solid #e5e7eb;
+  padding: 8px 0;
+}
 
 .action-bar{
   display:none;

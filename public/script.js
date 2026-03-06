@@ -29,6 +29,29 @@ toggle.onclick=()=>{
 };
 applyTheme(localStorage.getItem("theme")||"light");
 
+/* 공지사항 */
+async function loadNotices(){
+  const board = qs("noticeBoard");
+  if(!board) return;
+
+  try{
+    const r = await fetch("/api/notices", { cache: "no-store" });
+    if(!r.ok) throw new Error(`HTTP ${r.status}`);
+    const notices = await r.json();
+
+    if(!Array.isArray(notices) || notices.length===0){
+      board.innerHTML = "<li>등록된 공지사항이 없습니다.</li>";
+      return;
+    }
+
+    board.innerHTML = notices
+      .map(n => `<li>[${n.date || "-"}] ${n.text || ""}</li>`)
+      .join("");
+  }catch{
+    board.innerHTML = "<li>공지사항을 불러오지 못했습니다.</li>";
+  }
+}
+
 /* 오늘 */
 async function loadToday(){
   showLoading();
@@ -71,3 +94,8 @@ async function loadMonthlyMeal(){
     grid.innerHTML+=`<div><strong>${i}</strong>${map[k]||""}</div>`;
   }
 }
+
+document.addEventListener("DOMContentLoaded",()=>{
+  loadNotices();
+  setInterval(loadNotices, 60_000);
+});
