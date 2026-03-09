@@ -26,9 +26,24 @@ body {
   margin: 0;
 }
 
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .topbar a {
   color: #93c5fd;
   text-decoration: none;
+}
+
+.topbar-actions button {
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: #475569;
+  color: #e2e8f0;
+  cursor: pointer;
 }
 
 .panel {
@@ -42,6 +57,10 @@ body {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 8px;
+}
+
+.auth-grid-single {
+  grid-template-columns: 1fr;
 }
 
 .auth-grid input,
@@ -76,6 +95,10 @@ body {
   margin: 10px 0 0;
   color: #94a3b8;
   font-size: 13px;
+}
+
+.auth-line {
+  margin: 10px 0 0;
 }
 
 #authMessage.error,
@@ -186,6 +209,22 @@ body {
 
 .notice-delete {
   background: #991b1b;
+}
+
+.login-page .dashboard {
+  max-width: 520px;
+  min-height: 100vh;
+  padding-top: 64px;
+}
+
+.login-card {
+  margin-top: 24px;
+}
+
+.login-help {
+  margin: 10px 0 0;
+  color: #94a3b8;
+  font-size: 13px;
 }
 
 @media (max-width: 900px) {

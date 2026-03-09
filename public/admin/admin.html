@@ -3,28 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>관리자 페이지</title>
+  <title>관리자 스테이터스</title>
   <link rel="stylesheet" href="admin.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
   <div class="dashboard">
     <header class="topbar">
-      <h1>관리자 대시보드</h1>
-      <a href="/">서비스 화면</a>
-    </header>
-
-    <section class="panel auth-panel">
-      <h2>관리자 인증</h2>
-      <div class="auth-grid">
-        <input id="adminIdInput" type="text" placeholder="관리자 ID" autocomplete="username">
-        <input id="adminPasswordInput" type="password" placeholder="관리자 비밀번호" autocomplete="current-password">
-        <input id="adminKeyInput" type="password" placeholder="관리자 인증키" autocomplete="off">
-        <button id="loginBtn" type="button">로그인 적용</button>
+      <h1>관리자 스테이터스</h1>
+      <div class="topbar-actions">
+        <a href="/">서비스 화면</a>
         <button id="logoutBtn" type="button">로그아웃</button>
       </div>
-      <p id="authMessage">관리자 정보를 입력하고 로그인하세요.</p>
-    </section>
+    </header>
+    <p id="authMessage" class="auth-line">인증 확인 중...</p>
 
     <section class="status-grid">
       <div class="status-card">총 요청<span id="totalRequests">0</span></div>

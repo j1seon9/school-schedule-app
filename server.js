@@ -16,7 +16,11 @@ const BASE_URL = "https://open.neis.go.kr/hub";
 
 const ADMIN_ID = (process.env.ADMIN_ID || "admin").trim();
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin1234";
-const ADMIN_AUTH_KEY = (process.env.ADMIN_AUTH_KEY || "change-this-admin-key").trim();
+const hasAdminAuthKeyConfig = typeof process.env.ADMIN_AUTH_KEY === "string";
+const ADMIN_AUTH_KEY = hasAdminAuthKeyConfig
+  ? process.env.ADMIN_AUTH_KEY.trim()
+  : "change-this-admin-key";
+const ADMIN_AUTH_KEY_REQUIRED = ADMIN_AUTH_KEY.length > 0;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -32,6 +36,9 @@ const NOTICE_MAX_ITEMS = 100;
 
 if (!API_KEY) {
   console.warn("[WARN] API_KEY is not set. NEIS endpoints will return API_KEY_MISSING.");
+}
+if (hasAdminAuthKeyConfig && !ADMIN_AUTH_KEY_REQUIRED) {
+  console.warn("[WARN] ADMIN_AUTH_KEY is empty. Admin key check is disabled.");
 }
 
 const app = express();
@@ -80,10 +87,11 @@ function extractAdminHeaders(req) {
 
 function requireAdminAuth(req, res, next) {
   const { id, password, key } = extractAdminHeaders(req);
+  const keyValid = ADMIN_AUTH_KEY_REQUIRED ? safeEqualText(key, ADMIN_AUTH_KEY) : true;
   const valid =
     safeEqualText(id, ADMIN_ID) &&
     safeEqualText(password, ADMIN_PASSWORD) &&
-    safeEqualText(key, ADMIN_AUTH_KEY);
+    keyValid;
 
   if (!valid) {
     return res.status(401).json({ error: "UNAUTHORIZED" });

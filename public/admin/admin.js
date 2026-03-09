@@ -1,6 +1,7 @@
 const STORAGE_KEY = "admin.credentials.v1";
 const REFRESH_INTERVAL_MS = 5000;
 const MAX_POINTS = 30;
+const LOGIN_PATH = "/admin/login.html";
 
 const totalRequestsEl = document.getElementById("totalRequests");
 const todayRequestsEl = document.getElementById("todayRequests");
@@ -11,10 +12,6 @@ const ddosMetaEl = document.getElementById("ddosMeta");
 const ddosListEl = document.getElementById("ddosList");
 const noticeListEl = document.getElementById("noticeList");
 
-const adminIdInputEl = document.getElementById("adminIdInput");
-const adminPasswordInputEl = document.getElementById("adminPasswordInput");
-const adminKeyInputEl = document.getElementById("adminKeyInput");
-const loginBtnEl = document.getElementById("loginBtn");
 const logoutBtnEl = document.getElementById("logoutBtn");
 const authMessageEl = document.getElementById("authMessage");
 
@@ -36,80 +33,65 @@ function setMessage(el, message, type = "") {
   if (type) el.classList.add(type);
 }
 
+function redirectToLogin(reason = "") {
+  const query = reason ? `?reason=${encodeURIComponent(reason)}` : "";
+  window.location.replace(`${LOGIN_PATH}${query}`);
+}
+
 function getSavedCredentials() {
   const raw = sessionStorage.getItem(STORAGE_KEY);
   if (!raw) return null;
 
   try {
     const parsed = JSON.parse(raw);
-    if (!parsed?.id || !parsed?.password || !parsed?.key) return null;
-    return parsed;
+    if (!parsed?.id || !parsed?.password) return null;
+    return {
+      id: String(parsed.id).trim(),
+      password: String(parsed.password),
+      key: String(parsed.key || "").trim()
+    };
   } catch {
     return null;
   }
-}
-
-function saveCredentials(creds) {
-  sessionStorage.setItem(STORAGE_KEY, JSON.stringify(creds));
 }
 
 function clearCredentials() {
   sessionStorage.removeItem(STORAGE_KEY);
 }
 
-function getInputCredentials() {
-  return {
-    id: String(adminIdInputEl?.value || "").trim(),
-    password: String(adminPasswordInputEl?.value || ""),
-    key: String(adminKeyInputEl?.value || "").trim()
+function buildAuthHeaders(creds) {
+  const headers = {
+    "x-admin-id": creds.id,
+    "x-admin-password": creds.password
   };
-}
-
-function fillInputs(creds) {
-  if (!creds) return;
-  if (adminIdInputEl) adminIdInputEl.value = creds.id || "";
-  if (adminPasswordInputEl) adminPasswordInputEl.value = creds.password || "";
-  if (adminKeyInputEl) adminKeyInputEl.value = creds.key || "";
-}
-
-function isLoggedIn() {
-  return Boolean(getSavedCredentials());
+  if (creds.key) headers["x-admin-key"] = creds.key;
+  return headers;
 }
 
 function updateAuthUi(loggedIn) {
-  if (loginBtnEl) loginBtnEl.disabled = false;
   if (logoutBtnEl) logoutBtnEl.disabled = !loggedIn;
   if (addNoticeBtnEl) addNoticeBtnEl.disabled = !loggedIn;
   if (noticeInputEl) noticeInputEl.disabled = !loggedIn;
 }
 
-function buildAuthHeaders(creds) {
-  return {
-    "x-admin-id": creds.id,
-    "x-admin-password": creds.password,
-    "x-admin-key": creds.key
-  };
-}
-
 async function adminFetch(url, options = {}) {
   const creds = getSavedCredentials();
   if (!creds) {
+    redirectToLogin("required");
     const err = new Error("NO_CREDENTIALS");
     err.status = 401;
     throw err;
   }
 
   const headers = new Headers(options.headers || {});
-  const authHeaders = buildAuthHeaders(creds);
-  for (const [name, value] of Object.entries(authHeaders)) {
+  for (const [name, value] of Object.entries(buildAuthHeaders(creds))) {
     headers.set(name, value);
   }
 
   const response = await fetch(url, { ...options, headers });
   if (response.status === 401) {
     clearCredentials();
-    updateAuthUi(false);
-    setMessage(authMessageEl, "인증 실패. 관리자 정보를 다시 입력하세요.", "error");
+    redirectToLogin("expired");
     const err = new Error("UNAUTHORIZED");
     err.status = 401;
     throw err;
@@ -191,11 +173,11 @@ async function loadMonitor() {
   const memoryMb = Number(data?.system?.memoryMb || 0);
   const notices = Number(data?.notices?.total || 0);
 
-  totalRequestsEl.textContent = String(total);
-  todayRequestsEl.textContent = String(today);
-  cpuLoadEl.textContent = cpuLoad.toFixed(2);
-  memoryUsageEl.textContent = memoryMb.toFixed(2);
-  noticeCountEl.textContent = String(notices);
+  if (totalRequestsEl) totalRequestsEl.textContent = String(total);
+  if (todayRequestsEl) todayRequestsEl.textContent = String(today);
+  if (cpuLoadEl) cpuLoadEl.textContent = cpuLoad.toFixed(2);
+  if (memoryUsageEl) memoryUsageEl.textContent = memoryMb.toFixed(2);
+  if (noticeCountEl) noticeCountEl.textContent = String(notices);
 
   pushChartPoint(total);
 }
@@ -258,6 +240,7 @@ function renderNoticeList(notices) {
     edit.addEventListener("click", async () => {
       const next = prompt("공지사항 수정", notice.text || "");
       if (next === null) return;
+
       const textValue = next.trim();
       if (!textValue) {
         setMessage(noticeMessageEl, "수정할 내용을 입력하세요.", "error");
@@ -266,7 +249,7 @@ function renderNoticeList(notices) {
 
       try {
         await updateNotice(notice.id, textValue);
-        setMessage(noticeMessageEl, "공지사항이 수정되었습니다.", "ok");
+        setMessage(noticeMessageEl, "공지사항을 수정했습니다.", "ok");
         await loadNotices();
       } catch (error) {
         if (error?.status === 401) return;
@@ -282,7 +265,7 @@ function renderNoticeList(notices) {
       if (!confirm("이 공지사항을 삭제할까요?")) return;
       try {
         await deleteNotice(notice.id);
-        setMessage(noticeMessageEl, "공지사항이 삭제되었습니다.", "ok");
+        setMessage(noticeMessageEl, "공지사항을 삭제했습니다.", "ok");
         await loadNotices();
       } catch (error) {
         if (error?.status === 401) return;
@@ -322,7 +305,7 @@ async function addNotice() {
     if (!response.ok) throw new Error("NOTICE_CREATE_FAILED");
 
     if (noticeInputEl) noticeInputEl.value = "";
-    setMessage(noticeMessageEl, "공지사항이 등록되었습니다.", "ok");
+    setMessage(noticeMessageEl, "공지사항을 등록했습니다.", "ok");
     await loadNotices();
     await loadMonitor();
   } catch (error) {
@@ -332,8 +315,11 @@ async function addNotice() {
 }
 
 async function refreshDashboard() {
-  if (!isLoggedIn()) return;
-  await Promise.allSettled([loadMonitor(), loadDdos(), loadNotices()]);
+  const results = await Promise.allSettled([loadMonitor(), loadDdos(), loadNotices()]);
+  const hasError = results.some((result) => result.status === "rejected" && result.reason?.status !== 401);
+  if (hasError) {
+    setMessage(noticeMessageEl, "일부 데이터를 불러오지 못했습니다.", "error");
+  }
 }
 
 function startAutoRefresh() {
@@ -349,48 +335,15 @@ function stopAutoRefresh() {
   refreshTimer = undefined;
 }
 
-async function applyLogin() {
-  const creds = getInputCredentials();
-  if (!creds.id || !creds.password || !creds.key) {
-    setMessage(authMessageEl, "ID, 비밀번호, 인증키를 모두 입력하세요.", "error");
-    return;
-  }
-
-  saveCredentials(creds);
-  updateAuthUi(true);
-
-  try {
-    await refreshDashboard();
-    startAutoRefresh();
-    setMessage(authMessageEl, "인증 완료", "ok");
-  } catch (error) {
-    clearCredentials();
-    updateAuthUi(false);
-    stopAutoRefresh();
-    setMessage(authMessageEl, "인증 실패. 관리자 정보를 확인하세요.", "error");
-  }
-}
-
 function applyLogout() {
   clearCredentials();
   stopAutoRefresh();
-  updateAuthUi(false);
-  setMessage(authMessageEl, "로그아웃되었습니다.");
-  setMessage(noticeMessageEl, "로그인 후 공지를 관리할 수 있습니다.");
-  if (noticeListEl) noticeListEl.innerHTML = "<li>로그인 후 확인 가능</li>";
+  redirectToLogin("logout");
 }
 
 function initEvents() {
-  loginBtnEl?.addEventListener("click", applyLogin);
   logoutBtnEl?.addEventListener("click", applyLogout);
   addNoticeBtnEl?.addEventListener("click", addNotice);
-
-  adminPasswordInputEl?.addEventListener("keydown", (event) => {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      applyLogin();
-    }
-  });
 }
 
 async function init() {
@@ -398,23 +351,23 @@ async function init() {
   initEvents();
 
   const creds = getSavedCredentials();
-  fillInputs(creds);
-  updateAuthUi(Boolean(creds));
-
   if (!creds) {
-    setMessage(authMessageEl, "관리자 정보를 입력하고 로그인하세요.");
-    setMessage(noticeMessageEl, "로그인 후 공지를 관리할 수 있습니다.");
-    if (noticeListEl) noticeListEl.innerHTML = "<li>로그인 후 확인 가능</li>";
+    redirectToLogin("required");
     return;
   }
+
+  updateAuthUi(true);
+  setMessage(authMessageEl, `${creds.id} 계정 인증 완료`, "ok");
+  setMessage(noticeMessageEl, "공지 목록을 불러오는 중...");
 
   try {
     await refreshDashboard();
     startAutoRefresh();
-    setMessage(authMessageEl, "인증 완료", "ok");
-  } catch {
-    applyLogout();
+  } catch (error) {
+    if (error?.status === 401) return;
+    setMessage(authMessageEl, "대시보드 로딩에 실패했습니다.", "error");
   }
 }
 
+window.addEventListener("beforeunload", stopAutoRefresh);
 init();
