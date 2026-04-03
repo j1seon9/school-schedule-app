@@ -79,6 +79,14 @@ body {
   border-radius: 12px;
 }
 
+.card2 {
+  background: var(--card2-bg);
+  margin-bottom: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid black;
+}
+
 input,
 button {
   width: 100%;
